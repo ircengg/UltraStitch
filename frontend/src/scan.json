@@ -1,0 +1,35 @@
+{
+    "project": {
+        "title": "Kiln"
+    },
+    "scans": [
+        {
+            "id": 1,
+            "name": "Scan 1",
+            "map": "heatmap.jpg"
+        },
+        {
+            "id": 2,
+            "name": "Scan 2",
+            "map": "heatmap.jpg"
+        },
+        {
+            "id": 3,
+            "name": "Scan 3",
+            "map": "heatmap.jpg"
+        },
+        {
+            "id": 4,
+            "name": "Scan 4",
+            "map": "heatmap.jpg"
+        }
+    ],
+    "drawing": {
+        "fontSize": 200,
+        "fontColor": "#bf0d0d",
+        "surfaceHeight": 14000,
+        "surfaceWidth": 65000,
+        "gridStep": 100,
+        "scanOpacity": 40
+    }
+}
