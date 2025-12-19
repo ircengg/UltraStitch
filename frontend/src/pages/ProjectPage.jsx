@@ -6,7 +6,7 @@ import {
     Text,
 } from "@mantine/core";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom } from "../atom";
+import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom, thkDataAtom } from "../atom";
 import { useApi } from "../hooks/useApi";
 import { useEffect } from "react";
 import { useRecoilValue } from "recoil";
@@ -23,6 +23,7 @@ export default function ProjectPage() {
     const setDrawing = useSetRecoilState(drawingAtom);
     const setReference = useSetRecoilState(referenceAtom);
     const setMeasurement = useSetRecoilState(mesurementAtom)
+    const setThkData = useSetRecoilState(thkDataAtom);
 
     const [newProject, setNewProject] = useState({
         title: "Untitled",
@@ -37,20 +38,21 @@ export default function ProjectPage() {
             setScans(res.scans)
             setDrawing(res.drawing)
             setReference(res.reference);
-            setMeasurement(res.measurement)
+            setMeasurement(res.measurement);          
         }
     };
 
     const handleOpen = async () => {
         setProjectType(null)
         const res = await api("open_project");
-        console.log(res)
+        // console.log(res);
         if (res) {
             setProject(res.project);
             setDrawing(prev => ({ ...prev, ...res.drawing }));
             setScans(res.scans)
             setReference(res.reference);
-            setMeasurement(res.measurement)
+            setMeasurement(res.measurement);
+            setThkData(res.thk_data);
 
         }
     };

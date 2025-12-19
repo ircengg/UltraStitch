@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Layer, Rect, Circle, Line, Transformer } from "react-konva";
+import { Layer, Rect, Circle, Line, Transformer, Text } from "react-konva";
 import { useRecoilState } from "recoil";
 import { drawingAtom, newShapeAtom, selectedObjectAtom, toolbarAtom } from "../atom";
 import { useRecoilValue } from "recoil";
@@ -8,7 +8,7 @@ export default function DrawingShapes() {
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
     const newShape = useRecoilValue(newShapeAtom);
     const trRef = useRef();
-   
+
 
     return (
         <Layer>
@@ -105,7 +105,7 @@ const Shape = ({ shape }) => {
             <Rect
                 x={shape.x}
                 y={shape.y}
-                stroke={isSelected ? "blue" : drawing.ShapeColor}
+                stroke={isSelected ? "blue" : drawing.shapeFontColor}
                 strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
                 draggable={toolbar.scan_registration_mode && isSelected}
                 onClick={handleSelect}
@@ -114,7 +114,7 @@ const Shape = ({ shape }) => {
                 onTransformEnd={(e) => handleTransformEnd(shape.id, e)}
                 width={shape.width}
                 height={shape.height}
-               
+
             />
         )}
 
@@ -122,7 +122,7 @@ const Shape = ({ shape }) => {
             <Circle
                 x={shape.x}
                 y={shape.y}
-                stroke={isSelected ? "blue" : drawing.ShapeColor}
+                stroke={isSelected ? "blue" : drawing.shapeFontColor}
                 draggable={toolbar.scan_registration_mode && isSelected}
                 onClick={() => handleSelect(shape.id)}
                 onTap={() => handleSelect(shape.id)}
@@ -137,7 +137,7 @@ const Shape = ({ shape }) => {
             <Line
                 x={shape.x}
                 y={shape.y}
-                stroke={isSelected ? "blue" : drawing.ShapeColor}
+                stroke={isSelected ? "blue" : drawing.shapeFontColor}
                 draggable={toolbar.scan_registration_mode && isSelected}
                 onClick={() => handleSelect(shape.id)}
                 onTap={() => handleSelect(shape.id)}
@@ -149,5 +149,14 @@ const Shape = ({ shape }) => {
                 strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
             />
         )}
+        <Text
+            x={shape.x}
+            y={shape.y}
+            text={`R:${shape.radius || ""}, W:${shape.width || ""}, H:${shape.height || ""} mm`}
+            fontSize={drawing.shapeFontSize}
+            fill={drawing.shapeFontColor}
+            offsetX={40}
+            offsetY={10}
+        />
     </>
 }

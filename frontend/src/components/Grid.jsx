@@ -67,7 +67,7 @@ export default function Grid() {
                         x={m.x + 5}
                         y={-5}
                         text={`${m.meters.toFixed(1)} m`}
-                        fontSize={drawing.fontSize}
+                        fontSize={drawing.gridfontSize}
                         fill="#333"
                         rotation={-90}
                     />
@@ -83,10 +83,10 @@ export default function Grid() {
                         strokeWidth={1.5}
                     />
                     <Text
-                        x={5}
-                        y={m.y + 12}
+                        x={-drawing.gridfontSize * 3}
+                        y={m.y }
                         text={`${m.meters.toFixed(1)} m`}
-                        fontSize={drawing.fontSize}
+                        fontSize={drawing.gridfontSize}
                         fill="#333"
                     />
                 </Group>

@@ -18,8 +18,7 @@ export const Measurements = () => {
 const Dimension = ({ dimension }) => {
     const drawing = useRecoilValue(drawingAtom);
     const [selected, setSelected] = useRecoilState(selectedObjectAtom);
-    const { fontColor, fontSize } = drawing;
-
+   
     const ARROW_SIZE = 40;     // size of arrow head (mm)
     const TEXT_OFFSET = 25;    // offset away from the line (mm)
     let m = dimension;
@@ -74,7 +73,7 @@ const Dimension = ({ dimension }) => {
         {/* Main dimension line */}
         <Line
             points={[p1.x, p1.y, p2.x, p2.y]}
-            stroke={isSelected ? "blue" : fontColor}
+            stroke={isSelected ? "blue" : drawing.mFontColor}
             strokeWidth={isSelected ? 12 : 6}
             onClick={e => {
                 console.log(dimension)
@@ -86,7 +85,7 @@ const Dimension = ({ dimension }) => {
         {/* Left arrow */}
         <Line
             points={arrow1}
-            stroke={fontColor}
+            stroke={drawing.mFontColor}
             strokeWidth={6}
             closed
         />
@@ -94,7 +93,7 @@ const Dimension = ({ dimension }) => {
         {/* Right arrow */}
         <Line
             points={arrow2}
-            stroke={fontColor}
+            stroke={drawing.mFontColor}
             strokeWidth={6}
             closed
         />
@@ -104,8 +103,8 @@ const Dimension = ({ dimension }) => {
             x={textX}
             y={textY}
             text={`${distMM} mm`}
-            fontSize={fontSize}
-            fill={fontColor}
+            fontSize={drawing.mFontSize}
+            fill={drawing.mFontColor}
             offsetX={40}
             offsetY={10}
         />

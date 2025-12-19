@@ -13,6 +13,7 @@ import {
 
 import { useRecoilState } from "recoil";
 import { toolbarAtom } from "../atom";
+import { IconFilterPlus } from "@tabler/icons-react";
 
 
 const Toolbar = () => {
@@ -22,8 +23,8 @@ const Toolbar = () => {
     const activateTool = (toolName) => {
         setToolbar({
             ...toolbar,
-            measuring:false,
-            scan_registration_mode:false,
+            measuring: false,
+            scan_registration_mode: false,
             draw_rectangle: false,
             draw_circle: false,
             draw_polygon: false,
@@ -45,6 +46,18 @@ const Toolbar = () => {
 
             <Group justify="space-between" align="center" px="md" p={5}>
                 <Group gap="sm">
+
+                    {/* ------------ Measure Tool ------------ */}
+                    <Tooltip label="Fit All">
+                        <ActionIcon
+                            onClick={() => setToolbar({ ...toolbar, fit_all: true })}
+                        >
+                            <IconFilterPlus
+                                style={{ width: "70%", height: "70%" }}
+                                stroke={1.5}
+                            />
+                        </ActionIcon>
+                    </Tooltip>
 
                     {/* ------------ Measure Tool ------------ */}
                     <Tooltip label="Measure">
@@ -72,7 +85,7 @@ const Toolbar = () => {
                         </ActionIcon>
                     </Tooltip>
 
-                    <Divider orientation="vertical" color="rgba(3, 1, 24, 1)" size={2}  />
+                    <Divider orientation="vertical" color="rgba(3, 1, 24, 1)" size={2} />
 
                     {/* ------------ Drawing Tools ------------ */}
 

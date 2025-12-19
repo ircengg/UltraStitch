@@ -6,6 +6,8 @@ import glob
 import numpy as np
 import json
 from datetime import datetime
+from urllib.parse import quote
+from backend.utils import numpy_to_json_list
 
 def create_project(self, projectmeta):
     project_title = projectmeta.get("title", "Untitled")
@@ -86,6 +88,7 @@ def open_project(self):
     scans = []
     reference = []
     measurement = []
+    thk_data = None
 
     # 4. Read HDF5 project metadata
     with h5py.File(project_file_path, "r") as h5:
@@ -96,12 +99,28 @@ def open_project(self):
             reference = json.loads(h5["meta/reference"][()].decode("utf-8"))
         if "measurement" in h5["meta"]:
             measurement = json.loads(h5["meta/measurement"][()].decode("utf-8"))
+            
+        # ---------------------------------
+        # THK DATA (registration output)
+        # ---------------------------------
+        if "output" in h5 and "matrix" in h5["output"]:
+            matrix = h5["output/matrix"][()]
+            x_values = h5["output/x_values"][()]
+            y_values = h5["output/y_values"][()]
+
+            thk_data = {
+                "matrix": numpy_to_json_list(matrix),
+                "x": numpy_to_json_list(x_values),
+                "y": numpy_to_json_list(y_values),
+            }
     
     for scan in scans:
-        scan['map_link'] = f"http://127.0.0.1:{self.http_port}/scans/{scan['id']}.png"
-    
+        encoded_id = quote(f"{scan['id']}.png")
+        scan['map_link'] = f"http://127.0.0.1:{self.http_port}/scans/{encoded_id}"
+        
     for r in reference:
-        r['map_link'] = f"http://127.0.0.1:{self.http_port}/reference/{r['map']}"    
+        encoded_map = quote(r['map'])
+        r['map_link'] = f"http://127.0.0.1:{self.http_port}/reference/{encoded_map}"       
         
     print(project)
 
@@ -111,7 +130,8 @@ def open_project(self):
         "drawing": drawing,
         "scans": scans,
         "reference":reference,
-        "measurement":measurement
+        "measurement":measurement,
+        "thk_data": thk_data
     }
     
     

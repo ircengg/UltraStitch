@@ -1,5 +1,5 @@
 
-import { Image as KonvaImage } from "react-konva";
+import { Image as KonvaImage, Text } from "react-konva";
 import useImage from "use-image";
 import { useRecoilState } from "recoil";
 import { drawingAtom, scansAtom, selectedObjectAtom, toolbarAtom } from "../atom";
@@ -59,33 +59,67 @@ const ScanImage = ({ scan }) => {
 
     };
 
-    return <KonvaImage
-        id={`scan-${scan.id}`}
-        // ref={imgRef}
-        image={image}
-        x={scan.x}
-        y={scan.y}
-        width={scan.width || 500}
-        height={scan.height || 500}
-        rotation={scan.rotation || 0}
-        draggable={toolbar.scan_registration_mode && isSelected}
-        stroke={isSelected ? "blue" : undefined}
-        strokeWidth={10}
-        onClick={(e) => {
-            // e.cancelBubble = true;
-            setSelected({
-                type: 'scan',
-                obj: scan
+    const bringToTop = () => {
+        let index = scans.findIndex(s => s.id == scan.id);
+        if (index != -1) {
+            setScans((prev) => {
+                const copy = [...prev];
+                const [item] = copy.splice(index, 1);
+                copy.push(item); // 🔝 move to end = drawn last
+                return copy;
             });
-        }}
-        onDragEnd={handleDragEnd}
-        onTransformEnd={handleTransformEnd}
-        opacity={drawing.scanOpacity / 100}
-        // onMouseEnter={onScanHoverIn}
-        // onMouseMove={handleMouseMove}
-        // onMouseLeave={onScanHoverOut}
-        perfectDrawEnabled={false}
-    />
+        }
+
+    };
+
+
+    return <>
+
+        {drawing.scanDetailsOn && <Text
+            x={scan.x}
+            y={scan.y}
+            width={scan.width}
+            height={scan.height}
+            rotation={scan.rotation || 0}
+            text={`${scan.x}, ${scan.y} \n\n ${scan.name}\n\n${scan.scan_details}`}
+            fontSize={drawing.fontSize}
+            fill="black"
+            opacity={0.5}
+        />}
+
+        <KonvaImage
+            id={`scan-${scan.id}`}
+            // ref={imgRef}
+            image={image}
+            x={scan.x}
+            y={scan.y}
+            width={scan.width || 500}
+            height={scan.height || 500}
+            rotation={scan.rotation || 0}
+            draggable={toolbar.scan_registration_mode && isSelected}
+            stroke={isSelected ? "blue" : undefined}
+            strokeWidth={10}
+            onMouseOver={e => {
+
+            }}
+            onClick={(e) => {
+                // e.cancelBubble = true;
+                setSelected({
+                    type: 'scan',
+                    obj: scan
+                });
+                bringToTop()
+
+            }}
+            onDragEnd={handleDragEnd}
+            onTransformEnd={handleTransformEnd}
+            opacity={drawing.scanOpacity / 100}
+            // onMouseEnter={onScanHoverIn}
+            // onMouseMove={handleMouseMove}
+            // onMouseLeave={onScanHoverOut}
+            perfectDrawEnabled={false}
+        />
+    </>
 }
 
 

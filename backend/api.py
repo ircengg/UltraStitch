@@ -14,6 +14,8 @@ import functools
 
 from backend import project
 from backend import scan
+from backend import license
+from backend import registration
 
 class API:
     def __init__(self):        
@@ -86,7 +88,7 @@ class API:
     
     def register_scans(self, scan_list):
         # call your UT stitching, grid generation etc.
-        from .registration_engine import process_scans
+        from .registration import process_scans
         return process_scans(scan_list)
     
     def select_directory(self):
@@ -108,7 +110,13 @@ class API:
     open_project = project.open_project
     save_project = project.save_project
     
+    #----- Scan Registration -----------
+    register_scans = registration.register_scans
+    export_registration = registration.export_registration
+    get_registered_data = registration.export_registration
     
+    #-------License-----------
+    getLicence = license.getLicence
     
     
         
@@ -163,3 +171,13 @@ class API:
             plt.close()
         except Exception as e:
             print("Heatmap generation failed:", e)
+            
+    def open_file_dialog(self, options):
+        window = self.main_window()
+        result = window.create_file_dialog(
+            webview.FileDialog.SAVE,
+            save_filename=options.get('save_filename'),
+            file_types=tuple(options.get('file_types', []))
+        )
+        return result[0] if result else None
+

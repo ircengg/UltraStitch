@@ -18,7 +18,7 @@ def import_scans(self):
         file_types=('Scan Files (*.csv)',)
     )
     if not result:
-        return []
+        return
 
     scan_files = result  # list of full paths
 
@@ -42,6 +42,7 @@ def import_scans(self):
         new_scans = []
         for src_path in scan_files:
             filename = os.path.basename(src_path)
+            name_without_ext = os.path.splitext(filename)[0]
 
             # Skip if already present
             if filename in existing_ids:
@@ -51,9 +52,9 @@ def import_scans(self):
             shutil.copy2(src_path, dst_path)
 
             scan_meta = {
-                "id": filename,
-                "name": filename,
-                "scan_details": filename,
+                "id": name_without_ext,
+                "name": name_without_ext,
+                "scan_details": name_without_ext,
                 "nominal_thk": 0,
                 "min_thk": 0,
                 "max_thk": 25,
@@ -86,8 +87,8 @@ def process_scans(self, scans):
 
     for scan in scans:
         scan_id = scan["id"]
-        # csv_path = os.path.join(scan_folder, scan_id + ".csv")
-        csv_path = os.path.join(scan_folder, scan_id )
+        csv_path = os.path.join(scan_folder, scan_id + ".csv")
+        # csv_path = os.path.join(scan_folder, scan_id )
         png_path = os.path.join(scan_folder, scan_id + ".png")
 
         if not os.path.exists(csv_path):
@@ -101,44 +102,35 @@ def process_scans(self, scans):
 
 
 def save_heatmap_fast(csv_path, out_path, nominal_thk):
-    """
-    FAST: Read scan CSV → generate heatmap PNG using NumPy + Pillow.
-    Color rules:
-        invalid, NaN, ND, non-numeric → WHITE
-        < 0.8 * nominal              → Brown/Orange
-        < 0.9 * nominal              → Yellow
-        >= 0.9 * nominal             → Green
-    """
+    if os.path.exists(out_path):
+        return
 
-    # Load CSV
     df = pd.read_csv(csv_path)
 
-    # Convert numeric area only
     raw = pd.to_numeric(
         df.iloc[1:, 1:].stack(),
-        errors='coerce'         # converts ND, text, empty → NaN
+        errors="coerce"
     ).unstack().to_numpy()
 
-    # Prepare output RGB
     h, w = raw.shape
-    rgb = np.zeros((h, w, 3), dtype=np.uint8)
 
-    # Mask invalid values
-    invalid_mask = np.isnan(raw)
+    # RGBA image
+    rgba = np.zeros((h, w, 4), dtype=np.uint8)
 
-    # Replace NaN with dummy number for comparison (will be overridden later)
+    invalid = np.isnan(raw)
     grid = np.nan_to_num(raw, nan=-9999)
 
-    # Rule masks
-    mask_bad  = (grid < 0.8 * nominal_thk) & (~invalid_mask)
-    mask_warn = (grid >= 0.8 * nominal_thk) & (grid < 0.9 * nominal_thk) & (~invalid_mask)
-    mask_good = (grid >= 0.9 * nominal_thk) & (~invalid_mask)
+    mask_bad  = (grid < 0.8 * nominal_thk) & (~invalid)
+    mask_warn = (grid >= 0.8 * nominal_thk) & (grid < 0.9 * nominal_thk)
+    mask_good = (grid >= 0.9 * nominal_thk)
 
-    # Apply colors
-    rgb[mask_bad]  = [204, 102, 0]      # brown/orange
-    rgb[mask_warn] = [255, 255, 0]      # yellow
-    rgb[mask_good] = [0, 255, 0]        # green
-    rgb[invalid_mask] = [255, 255, 255] # white
+    # Colors
+    rgba[mask_bad]  = [204, 102, 0, 255]
+    rgba[mask_warn] = [255, 255, 0, 255]
+    rgba[mask_good] = [0, 255, 0, 255]
 
-    # Save PNG
-    Image.fromarray(rgb, mode="RGB").save(out_path, "PNG")
+    # Transparent invalid
+    rgba[invalid] = [0, 0, 0, 0]
+
+    Image.fromarray(rgba, mode="RGBA").save(out_path, "PNG")
+

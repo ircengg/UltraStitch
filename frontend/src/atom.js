@@ -2,6 +2,15 @@ import { atom } from 'recoil';
 
 
 
+export const thkDataAtom = atom({
+  key: 'thkDataAtom',
+  default: null
+});
+
+
+
+
+
 export const toolbarAtom = atom({
   key: 'toolbarAtom',
   default: {
@@ -12,6 +21,7 @@ export const toolbarAtom = atom({
     draw_rectangle: false,
     draw_circle: false,
     draw_polygon: false,
+    fit_all: true
   }
 });
 
@@ -61,26 +71,47 @@ export const mesurementAtom = atom({
 export const drawingAtom = atom({
   key: 'drawingAtom',
   default: {
-    fontSize: 200,
-    fontColor: "#bf0d0d",
+
+    //grid
+    showGrid: true,
     surfaceHeight: 14000,
     surfaceWidth: 65000,
-    gridStep: 100, // 100 mm,
-    scanOpacity: 40,
-    scanDetailsOn: true,
+    gridStep: 100, // 100 mm, 
+    gridfontSize: 80,
+    gridfontColor: "#bf0d0d",
+
+    //References
     showReference: true,
+    referenceOpacity: 50,
+
+    //Scans
     showScans: true,
-    showMeasurements: true,
+    scanOpacity: 70,
+    scanfontSize: 80,
+    scanfontColor: "#bf0d0d",
+    scanDetailsOn: true,
+
+
+    //Shapes
     showShapes: true,
-    showGrid: true,
-
-
-
+    shapeOpacity: 80,
+    shapeFontSize: 89,
+    shapeFontColor: "#bf0d0d",
     shapes: [], // <--- ALL SHAPES STORED HERE
     shapeLineSize: 10,
     ShapeColor: "#bf0d0d",
 
-    drawingShape: null, // temp active shape while drawing
+    //Measurements
+    showMeasurements: true,
+    mFontSize: 90,
+    mFontColor: "#bf0d0d",
+
+
+    //Thickness
+    showThickness: false,
+
+
+
   }
 });
 
@@ -133,6 +164,16 @@ export const menuEventAtom = atom({
 
 
 
+
+export const viewAtom = atom({
+  key: 'viewAtom',
+  default: {
+    scan_list: true,
+    drawing_setting: false,
+    scan_editor: false,
+    about: false
+  }
+});
 
 
 

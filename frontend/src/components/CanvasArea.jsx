@@ -4,7 +4,7 @@ import { Box } from "@mantine/core";
 import useImage from "use-image";
 import { useEffect } from "react";
 import { useRecoilState } from "recoil";
-import { drawingAtom, mesurementAtom, newMesaurementAtom, newShapeAtom, projectAtom, referenceAtom, scansAtom, selectedObjectAtom, selectedScanAtom, toolbarAtom } from "../atom";
+import { drawingAtom, mesurementAtom, newMesaurementAtom, newShapeAtom, projectAtom, referenceAtom, scansAtom, selectedObjectAtom, selectedScanAtom, thkDataAtom, toolbarAtom } from "../atom";
 import Grid from "./Grid";
 import { Measurements } from "./Measurements";
 import { useRecoilValue } from "recoil";
@@ -14,6 +14,8 @@ import ScanImage from "./ScanImage";
 import Reference from "./Reference";
 import DrawingShapes from "./DrawingShapes";
 import { useSetRecoilState } from "recoil";
+import ThicknessGrid from "./ThicknessGrid";
+import HoverThickness from "./HoverThickness";
 
 
 export default function CanvasArea() {
@@ -28,6 +30,10 @@ export default function CanvasArea() {
     const [toolbar, setToolbar] = useRecoilState(toolbarAtom);
     const [measurements, setMeasurements] = useRecoilState(mesurementAtom);
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
+
+    const thkData = useRecoilValue(thkDataAtom);
+
+    const [hoverValue, setHoverValue] = useState(null);
 
     const [dimensions, setDimensions] = useState({
         width: window.innerWidth,
@@ -55,8 +61,18 @@ export default function CanvasArea() {
         return transform.point(pos);
     }
 
+    function binarySearchIndex(arr, value) {
+        let lo = 0, hi = arr.length - 1;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            if (arr[mid] === value) return mid;
+            if (arr[mid] < value) lo = mid + 1;
+            else hi = mid - 1;
+        }
+        return Math.max(0, Math.min(lo, arr.length - 1));
+    }
 
-
+    const rafRef = useRef(null);
 
 
 
@@ -76,7 +92,7 @@ export default function CanvasArea() {
         const transform = stage.getAbsoluteTransform().copy().invert();
         const pos = transform.point(pointer);
 
-        console.log("Dropped at world coords:", pos);
+        // console.log("Dropped at world coords:", pos);
 
         const scans_ = [...scans];
         const data = JSON.parse(e.dataTransfer.getData("scan-data"));
@@ -174,7 +190,7 @@ export default function CanvasArea() {
         } else {
             let m = { ...newMeasurement };
             m.p2 = pos
-            m.distance = Math.hypot(m.p2.x - m.p1.x, m.p2.y - m.p1.y);
+            m.distance = round(Math.hypot(m.p2.x - m.p1.x, m.p2.y - m.p1.y));
             setMeasurements(prev => [...prev, m]);
             setNewMeasurement(null);
         }
@@ -191,8 +207,8 @@ export default function CanvasArea() {
             setNewShape({
                 id,
                 type: "rect",
-                x: pos.x,
-                y: pos.y,
+                x: round(pos.x),
+                y: round(pos.y),
                 width: 0,
                 height: 0
             });
@@ -202,8 +218,8 @@ export default function CanvasArea() {
             setNewShape({
                 id,
                 type: "circle",
-                x: pos.x,
-                y: pos.y,
+                x: round(pos.x),
+                y: round(pos.y),
                 radius: 0
             });
 
@@ -213,7 +229,7 @@ export default function CanvasArea() {
             setNewShape({
                 id,
                 type: "polygon",
-                points: [pos.x, pos.y],   // first point
+                points: [round(pos.x), round(pos.y)],   // first point
                 stroke: "black"
             });
         }
@@ -234,6 +250,38 @@ export default function CanvasArea() {
             return; // IMPORTANT: don't continue into shape drawing logic
         }
 
+
+        //---Live Thickness Values
+        if (drawing.showThickness) {
+            if (rafRef.current) return;
+            if (!thkData) return;
+
+            rafRef.current = requestAnimationFrame(() => {
+                rafRef.current = null;
+
+                const stage = e.target.getStage();
+                const pos = getRelativePointerPosition(stage);
+                if (!pos) return;
+
+                const nx = pos.x / drawing.surfaceWidth;
+                const ny = pos.y / drawing.surfaceHeight;
+
+                const worldX = nx * thkData.x[thkData.x.length - 1];
+                const worldY = ny * thkData.y[thkData.y.length - 1];
+
+                const col = binarySearchIndex(thkData.x, worldX);
+                const row = binarySearchIndex(thkData.y, worldY);
+                const thk = thkData.matrix[row]?.[col] ?? null;
+                // console.log(thk)
+                setHoverValue({
+                    thk,
+                    pos,
+                    x:row,
+                    y:col
+                });
+            });
+        }
+
         // SHAPE DRAWING LOGIC (your existing code)
         if (!toolbar.draw_rectangle && !toolbar.draw_circle && !toolbar.draw_polygon) return;
         if (!newShape) return;
@@ -243,11 +291,11 @@ export default function CanvasArea() {
         setNewShape(s => {
             const shape = { ...s };
             if (shape.type === "rect") {
-                shape.width = pos.x - shape.x;
-                shape.height = pos.y - shape.y;
+                shape.width = round(pos.x - shape.x);
+                shape.height = round(pos.y - shape.y);
             }
             if (shape.type === "circle") {
-                shape.radius = Math.hypot(pos.x - shape.x, pos.y - shape.y);
+                shape.radius = round(Math.hypot(pos.x - shape.x, pos.y - shape.y));
             }
             if (shape.type === "polygon") {
                 const pts = [...shape.points];
@@ -256,6 +304,8 @@ export default function CanvasArea() {
             }
             return shape;
         });
+
+
     };
 
 
@@ -273,12 +323,21 @@ export default function CanvasArea() {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            console.log("key pressed:", e.key);
+            // console.log("key pressed:", e.key);
 
             if (e.key === "Escape") {
                 // Example: cancel measuring
                 setNewMeasurement(null);
                 setNewShape(null);
+                setToolbar({
+                    ...toolbar,
+                    measuring: false,
+                    scan_registration_mode: false,
+                    draw_rectangle: false,
+                    draw_circle: false,
+                    draw_polygon: false
+                });
+
             }
 
             if (e.key === "m") {
@@ -286,8 +345,8 @@ export default function CanvasArea() {
                 setToolbar(t => ({ ...t, measuring: !t.measuring }));
             }
             if (e.key === "Delete" && selectedObj) {
-                console.log("Deleting: ")
-                console.log(selectedObj)
+                // console.log("Deleting: ")
+                // console.log(selectedObj)
                 if (selectedObj.type == "dimension") {
                     setMeasurements(prev => prev.filter(p => p.id != selectedObj.obj?.id));
                 }
@@ -295,8 +354,8 @@ export default function CanvasArea() {
                     setDrawing(d => ({
                         ...d,
                         'shapes': d.shapes.filter(s => {
-                            console.log(s.id)
-                            console.log(selectedObj.obj?.id)
+                            // console.log(s.id)
+                            // console.log(selectedObj.obj?.id)
                             return s.id != selectedObj.obj?.id
                         })
                     }));
@@ -322,7 +381,12 @@ export default function CanvasArea() {
     }, [selectedObj]);
 
 
+    useEffect(() => {
+        if (toolbar.fit_all) {
 
+            setToolbar({ ...toolbar, fit_all: false })
+        }
+    }, [toolbar.fit_all])
 
 
     return (
@@ -351,73 +415,71 @@ export default function CanvasArea() {
 
                 onWheel={handleWheel}
                 onClick={handleCanvaClick}
-
-
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
+
             >
-                {
-                    drawing.showGrid && <Layer>
-                        <Grid
+                <Layer>
+                    {
+                        drawing.showGrid && <Grid
                             widthMM={drawing.surfaceWidth}
                             heightMM={drawing.surfaceHeight}
                         />
-                    </Layer>
-                }
+                    }
 
-                {
-                    drawing.showReference && <Layer>
-                        {references.map((reference) => (
+                    {
+                        drawing.showReference && references.map((reference) => (
                             <>
                                 <Reference reference={reference} key={reference.id} />
                             </>
-                        ))}
-                    </Layer>
-                }
+                        ))
+                    }
 
-                {
-                    drawing.showScans && <Layer>
-                        {scans.filter(scan => scan.x !== undefined && scan.y !== undefined).map((scan) => (
-
-                            <>
-                                <ScanImage scan={scan} key={scan.id} />
-                                {drawing.scanDetailsOn && <Text
-                                    x={scan.x}
-                                    y={scan.y}
-                                    rotation={scan.rotation || 0}
-                                    text={scan.name}
-                                    fontSize={drawing.fontSize * 2}
-                                    fill="black"
-                                />}
-                            </>
-                        ))}
-                        {
-                            toolbar.scan_registration_mode && <Transformer
-                                ref={trRef}
-                                rotateEnabled
-                                anchorSize={10}
-                                keepRatio={false}
-                                boundBoxFunc={(oldBox, newBox) => newBox}
-                            />
-                        }
-                    </Layer>
-
-                }
+                    {
+                        drawing.showThickness && <ThicknessGrid />
+                    }
+                </Layer>
 
 
-                {
-                    drawing.showMeasurements && <Layer>
-                        <Measurements />
-                    </Layer>
+                <Layer>
+                    {
+                        drawing.showScans && scans.filter(scan => scan.x !== undefined && scan.y !== undefined).map((scan) => (
+                            <ScanImage scan={scan} key={scan.id} />
+                        ))
+                    }
 
-                }
+                    {toolbar.scan_registration_mode && <Transformer
+                        ref={trRef}
+                        rotateEnabled
+                        anchorSize={10}
+                        keepRatio={false}
+                        boundBoxFunc={(oldBox, newBox) => newBox}
+                    />
+                    }
+
+                    {
+                        drawing.showMeasurements && <Measurements />
+
+                    }
+
+                </Layer>
+
+
 
                 {
                     drawing.showShapes && <DrawingShapes stageRef={stageRef} />
                 }
             </Stage>
 
+
+            {(hoverValue && drawing.showThickness) && <HoverThickness
+                value={hoverValue.thk}
+                pointer={hoverValue.pos}
+                visible={hoverValue ? true : false}
+                nominal={25} // or pass your nominal variable
+                offset={{ x: 18, y: 18 }}
+            />}
         </Box>
     );
 }

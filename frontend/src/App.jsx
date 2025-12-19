@@ -5,6 +5,7 @@ import ProjectPage from "./pages/ProjectPage";
 import ViewerPage from "./pages/ViewerPage";
 import "./App.css"
 import Menubar from "./components/Menu";
+import AboutPage from "./pages/AboutPage";
 
 export default function App() {
     const [project, setProject] = useRecoilState(projectAtom);
@@ -21,6 +22,7 @@ export default function App() {
         <>
             <Menubar />
             <ViewerPage />
+            <AboutPage />
         </>
     );
 }

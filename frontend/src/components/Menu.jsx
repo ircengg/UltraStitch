@@ -1,8 +1,12 @@
-import { Menu, Button, Group } from '@mantine/core';
+import { Menu, Button, Group, ActionIcon, CheckIcon } from '@mantine/core';
 import { useSetRecoilState } from 'recoil';
 import { useApi } from '../hooks/useApi';
-import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom } from '../atom';
+import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom, thkDataAtom, viewAtom } from '../atom';
 import { useRecoilState } from 'recoil';
+import { IconBrandSupernova } from '@tabler/icons-react';
+import { IconDeviceFloppy } from '@tabler/icons-react';
+import { IconCheckbox } from '@tabler/icons-react';
+import { IconSquare } from '@tabler/icons-react';
 
 export default function Menubar() {
     const { api } = useApi();
@@ -11,6 +15,9 @@ export default function Menubar() {
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
     const [reference, setReference] = useRecoilState(referenceAtom);
     const [measurement, setMeasurement] = useRecoilState(mesurementAtom);
+    const setThkData = useSetRecoilState(thkDataAtom);
+
+    const [view, setView] = useRecoilState(viewAtom);
     const setMenuEvent = useSetRecoilState(menuEventAtom)
 
 
@@ -61,9 +68,25 @@ export default function Menubar() {
         }
     }
 
+    const export_registered_scans = async () => {
+        const res = await api("export_registration");
+        alert('Excel exported successfully');
+    }
+
+    const register_scans = async () => {
+        const res = await api("register_scans");
+        if (res) {
+            console.log(res);
+            setThkData(res);
+        }
+    }
+
+
+
+
 
     const handleMenuClicked = (menuEvent) => {
-        setMenuEvent(menuEvent)
+        setView(prev => ({ ...prev, [menuEvent]: !prev[menuEvent] }))
     }
 
 
@@ -82,6 +105,10 @@ export default function Menubar() {
                 </Menu.Dropdown>
             </Menu>
 
+            <ActionIcon>
+                <IconDeviceFloppy />
+            </ActionIcon>
+
             {/* EDIT MENU */}
             <Menu>
                 <Menu.Target>
@@ -91,8 +118,9 @@ export default function Menubar() {
                 <Menu.Dropdown>
                     <Menu.Item onClick={handleScanImport}>Import</Menu.Item>
                     <Menu.Item onClick={handle_scan_process}>Process Scans</Menu.Item>
-                    <Menu.Item onClick={() => handleMenuClicked("edit_scans")}>Edit</Menu.Item>
-                    <Menu.Item onClick={() => handleMenuClicked("scan_list")}>Scan List</Menu.Item>
+                    <Menu.Item onClick={export_registered_scans}>Export Registered Scans</Menu.Item>
+                    <Menu.Item onClick={register_scans}>Register Scans</Menu.Item>
+
                 </Menu.Dropdown>
             </Menu>
 
@@ -103,21 +131,45 @@ export default function Menubar() {
                 </Menu.Target>
 
                 <Menu.Dropdown>
-                    <Menu.Item onClick={() => handleMenuClicked("drawing_settings")}>Zoom In</Menu.Item>
+                    <CheckMenu title={"Scan List"} name={"scan_list"} />
+                    <CheckMenu title={"Scan Editor"} name={"scan_editor"} />
+                    <CheckMenu title={"Drawing Setings"} name={"drawing_setting"} />
                 </Menu.Dropdown>
             </Menu>
 
             {/* HELP */}
-            {/* <Menu>
+            <Menu>
                 <Menu.Target>
                     <Button variant="subtle">Help</Button>
                 </Menu.Target>
-
                 <Menu.Dropdown>
-                    <Menu.Item onClick={() => handleMenuClicked("about_app")}>About</Menu.Item>
+                    <Menu.Item onClick={() => handleMenuClicked("about")}>About</Menu.Item>
                 </Menu.Dropdown>
-            </Menu> */}
+            </Menu>
 
         </Group>
     );
+}
+
+
+
+const CheckMenu = ({ name, title }) => {
+    const [view, setView] = useRecoilState(viewAtom);
+
+    const handleMenuClicked = (name) => {
+        setView(prev => ({ ...prev, [name]: !prev[name] }))
+    }
+
+    return <Menu.Item
+        leftSection={
+            view[name] ? (
+                <IconCheckbox size={16} />
+            ) : (
+                <IconSquare size={16} />
+            )
+        }
+        onClick={() => handleMenuClicked(name)}
+    >
+        {title || name}
+    </Menu.Item>
 }
