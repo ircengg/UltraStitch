@@ -4,7 +4,7 @@ import { Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 
 import { useRecoilState } from "recoil";
-import { drawingAtom, referenceAtom, selectedObjectAtom, toolbarAtom } from "../atom";
+import { drawingAtom, referenceAtom, selectedObjectAtom, staticServerAtom, toolbarAtom } from "../atom";
 
 import { useRecoilValue } from "recoil";
 import { round } from "../utils";
@@ -16,7 +16,10 @@ const Reference = ({ reference }) => {
     const [references, setReferences] = useRecoilState(referenceAtom)
     const drawing = useRecoilValue(drawingAtom);
     const toolbar = useRecoilValue(toolbarAtom);
-    const [image] = useImage(reference.map_link);
+    const static_server_url = useRecoilValue(staticServerAtom);
+
+
+    const [image] = useImage(`${static_server_url}/reference/${encodeURIComponent(reference.map)}`);
     const [selected, setSelected] = useRecoilState(selectedObjectAtom);
 
 

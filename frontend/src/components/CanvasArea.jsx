@@ -16,9 +16,11 @@ import DrawingShapes from "./DrawingShapes";
 import { useSetRecoilState } from "recoil";
 import ThicknessGrid from "./ThicknessGrid";
 import HoverThickness from "./HoverThickness";
+import { useApi } from "../hooks/useApi";
 
 
 export default function CanvasArea() {
+    const { api } = useApi()
     const stageRef = useRef();
     const trRef = useRef();
     const containerRef = useRef();
@@ -73,6 +75,8 @@ export default function CanvasArea() {
     }
 
     const rafRef = useRef(null);
+
+
 
 
 
@@ -194,6 +198,7 @@ export default function CanvasArea() {
             setMeasurements(prev => [...prev, m]);
             setNewMeasurement(null);
         }
+
     }
 
 
@@ -251,36 +256,6 @@ export default function CanvasArea() {
         }
 
 
-        //---Live Thickness Values
-        if (drawing.showThickness) {
-            if (rafRef.current) return;
-            if (!thkData) return;
-
-            rafRef.current = requestAnimationFrame(() => {
-                rafRef.current = null;
-
-                const stage = e.target.getStage();
-                const pos = getRelativePointerPosition(stage);
-                if (!pos) return;
-
-                const nx = pos.x / drawing.surfaceWidth;
-                const ny = pos.y / drawing.surfaceHeight;
-
-                const worldX = nx * thkData.x[thkData.x.length - 1];
-                const worldY = ny * thkData.y[thkData.y.length - 1];
-
-                const col = binarySearchIndex(thkData.x, worldX);
-                const row = binarySearchIndex(thkData.y, worldY);
-                const thk = thkData.matrix[row]?.[col] ?? null;
-                // console.log(thk)
-                setHoverValue({
-                    thk,
-                    pos,
-                    x:row,
-                    y:col
-                });
-            });
-        }
 
         // SHAPE DRAWING LOGIC (your existing code)
         if (!toolbar.draw_rectangle && !toolbar.draw_circle && !toolbar.draw_polygon) return;
@@ -306,6 +281,39 @@ export default function CanvasArea() {
         });
 
 
+        //---Live Thickness Values
+        if (drawing.showThickness) {
+            if (rafRef.current) return;
+            if (!thkData) return;
+
+            rafRef.current = requestAnimationFrame(() => {
+                rafRef.current = null;
+
+                const stage = e.target.getStage();
+                const pos = getRelativePointerPosition(stage);
+                if (!pos) return;
+
+                const nx = pos.x / drawing.surfaceWidth;
+                const ny = pos.y / drawing.surfaceHeight;
+
+                const worldX = nx * thkData.x[thkData.x.length - 1];
+                const worldY = ny * thkData.y[thkData.y.length - 1];
+
+                const col = binarySearchIndex(thkData.x, worldX);
+                const row = binarySearchIndex(thkData.y, worldY);
+                const thk = thkData.matrix[row]?.[col] ?? null;
+                // console.log(thk)
+                setHoverValue({
+                    thk,
+                    pos,
+                    x: row,
+                    y: col
+                });
+            });
+        }
+
+
+
     };
 
 
@@ -318,6 +326,27 @@ export default function CanvasArea() {
         }));
         setNewShape(null)
     };
+
+    const handleThkRegClick = async (e) => {
+        const stage = e.target.getStage();
+        const pos = getRelativePointerPosition(stage);
+        console.log(pos)
+        const thk = await api("getThicknessAt", { x: round(pos.x), y: round(pos.y) });
+        console.log("thk: ", thk);
+
+        if (thk) {
+            setHoverValue({
+                thk: thk.value,
+                pos,
+                x: thk.row,
+                y: thk.col,
+                nominal: thk.nominal
+            });
+        } else {
+            setHoverValue(null);
+        }
+
+    }
 
 
 
@@ -437,7 +466,7 @@ export default function CanvasArea() {
                     }
 
                     {
-                        drawing.showThickness && <ThicknessGrid />
+                        drawing.showThickness && <ThicknessGrid handleClick={handleThkRegClick} />
                     }
                 </Layer>
 
@@ -463,13 +492,13 @@ export default function CanvasArea() {
 
                     }
 
+
+                    {
+                        drawing.showShapes && <DrawingShapes stageRef={stageRef} />
+                    }
+
                 </Layer>
 
-
-
-                {
-                    drawing.showShapes && <DrawingShapes stageRef={stageRef} />
-                }
             </Stage>
 
 

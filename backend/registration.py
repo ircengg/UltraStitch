@@ -3,22 +3,84 @@ import json
 import h5py
 import numpy as np
 import pandas as pd
+from PIL import Image
 import webview
 from math import radians, sin, cos, ceil
 from backend.utils import numpy_to_json_list
+import bisect
+
+
+def _find_index(arr, value):
+    i = bisect.bisect_left(arr, value)
+    if i <= 0:
+        return 0
+    if i >= len(arr):
+        return len(arr) - 1
+    return i if abs(arr[i] - value) < abs(arr[i - 1] - value) else i - 1
 
 
 
+def getThicknessAt(self, pos={}):
+    """
+    Stateless thickness query.
+    Safe for multi-user / multi-project servers.
+    """
+    x = pos.get("x")
+    y = pos.get("y")
+
+    if not self.project_file_path:
+        return None
+
+    try:
+        with h5py.File(self.project_file_path, "r") as h5:
+            if "output" not in h5 or "matrix" not in h5["output"]:
+                return None
+
+            matrix = h5["output/matrix"]
+            nominal_thickness = h5["output/nominal_thickness"]
+            x_vals = h5["output/x_values"]
+            y_vals = h5["output/y_values"]
+
+            col = _find_index(x_vals, x)
+            row = _find_index(y_vals, y)
+
+            value = float(matrix[row, col])
+            nominal = float(nominal_thickness[row, col])
+
+            if np.isnan(value):
+                return None
+
+            return {
+                "x": float(x),
+                "y": float(y),
+                "row": int(row),
+                "col": int(col),
+                "value": value,
+                "nominal":nominal 
+            }
+
+    except Exception as e:
+        print("getThicknessAt error:", e)
+        return None
 
 
-def register_scans(self, cell_size=10, ):
+def register_scans(self, cell_size=10):    
     project_dir = self.project_dir
     project_file_path = self.project_file_path
     scans_folder = os.path.join(project_dir, "scans")
+
+    # --------------------------------------------------
+    # NEW: registration folder
+    # --------------------------------------------------
+    registration_dir = os.path.join(project_dir, "registration")
+    os.makedirs(registration_dir, exist_ok=True)
+
+    # --------------------------------------------------
     # Load metadata
+    # --------------------------------------------------
     with h5py.File(project_file_path, "r") as h5:
         drawing_meta = json.loads(h5["meta/drawing"][()].decode("utf-8"))
-        scans_meta = json.loads(h5["meta/scans"][()].decode("utf-8"))
+        scans_meta   = json.loads(h5["meta/scans"][()].decode("utf-8"))
 
     surface_w = drawing_meta["surfaceWidth"]
     surface_h = drawing_meta["surfaceHeight"]
@@ -26,10 +88,15 @@ def register_scans(self, cell_size=10, ):
     W = int(np.ceil(surface_w / cell_size))
     H = int(np.ceil(surface_h / cell_size))
 
-    reference = np.full((H, W), np.nan, dtype=np.float32)
+    # --------------------------------------------------
+    # Thickness + nominal thickness matrices
+    # --------------------------------------------------
+    reference_thk = np.full((H, W), np.nan, dtype=np.float32)
+    reference_nom = np.full((H, W), np.nan, dtype=np.float32)
 
-
-    # Process each scan
+    # --------------------------------------------------
+    # Process scans
+    # --------------------------------------------------
     for scan in scans_meta:
         scan_id = scan["id"]
         csv_file = os.path.join(scans_folder, f"{scan_id}.csv")
@@ -40,54 +107,83 @@ def register_scans(self, cell_size=10, ):
 
         scan_matrix = load_csv_matrix(csv_file)
 
-        reference = apply_scan_to_reference(
+        # Apply thickness
+        reference_thk = apply_scan_to_reference(
             scan_matrix,
             scan,
-            reference,
+            reference_thk,
             cell_size
         )
 
+        # Apply nominal thickness (scalar → grid)
+        nominal_thk = scan.get("nominal_thk")
+        if nominal_thk is not None:
+            nominal_matrix = np.full_like(scan_matrix, nominal_thk)
+            reference_nom = apply_scan_to_reference(
+                nominal_matrix,
+                scan,
+                reference_nom,
+                cell_size
+            )
+
         print(f"Registered scan {scan_id}")
 
-    # Prepare coordinate arrays
+    # --------------------------------------------------
+    # Coordinate arrays
+    # --------------------------------------------------
     x_values = np.arange(W) * cell_size
     y_values = np.arange(H) * cell_size
 
-    # Save into project HDF5
+    # --------------------------------------------------
+    # Save into HDF5
+    # --------------------------------------------------
     with h5py.File(project_file_path, "a") as h5:
-        for key in ["output/matrix", "output/x_values", "output/y_values"]:
+        for key in [
+            "output/thickness",
+            "output/nominal_thickness",
+            "output/x_values",
+            "output/y_values",
+        ]:
             if key in h5:
                 del h5[key]
 
         h5.create_dataset(
-            "output/matrix",
-            data=reference,
+            "output/thickness",
+            data=reference_thk,
             compression="gzip",
-            compression_opts=4,   # 3–6 is ideal
-            shuffle=True
+            compression_opts=4,
+            shuffle=True,
+        )
+
+        h5.create_dataset(
+            "output/nominal_thickness",
+            data=reference_nom,
+            compression="gzip",
+            compression_opts=4,
+            shuffle=True,
         )
 
         h5.create_dataset("output/x_values", data=x_values)
         h5.create_dataset("output/y_values", data=y_values)
 
-        # Write CSV string inside HDF5
-        # df = pd.DataFrame(reference, index=y_values, columns=x_values)
-        # df.index.name = "Y_mm"
-        # csv_str = df.to_csv()
+    # --------------------------------------------------
+    # NEW: save color image
+    # --------------------------------------------------
+    # Use average nominal thickness if grid varies
+    nominal_for_image = np.nanmean(reference_nom)
 
-        # if "output/csv" in h5:
-        #     del h5["output/csv"]
+    img_path = os.path.join(registration_dir, "thickness_map.png")
+    save_heatmap_from_matrix(
+        reference_thk,
+        img_path,
+        nominal_for_image
+    )
 
-        # h5.create_dataset("output/csv", data=csv_str.encode("utf-8"))
+    print("Registration completed, HDF5 + image written.")
 
-    print("Registration completed and written to HDF5.")
-    
     return {
-        "matrix": numpy_to_json_list(reference),
-        "x": numpy_to_json_list(x_values),
-        "y": numpy_to_json_list(y_values),
+        "image": img_path,
     }
-
 
 
 def export_registration(self):
@@ -247,3 +343,27 @@ def apply_scan_to_reference(scan_array, scan_meta, reference, cell_size):
 
     return reference
 
+
+def save_heatmap_from_matrix(matrix, out_path, nominal_thk):
+    if os.path.exists(out_path):
+        return
+
+    raw = matrix.astype(np.float32)
+    h, w = raw.shape
+
+    rgba = np.zeros((h, w, 4), dtype=np.uint8)
+
+    invalid = np.isnan(raw)
+    grid = np.nan_to_num(raw, nan=-9999)
+
+    mask_bad  = (grid < 0.8 * nominal_thk) & (~invalid)
+    mask_warn = (grid >= 0.8 * nominal_thk) & (grid < 0.9 * nominal_thk)
+    mask_good = (grid >= 0.9 * nominal_thk)
+
+    rgba[mask_bad]  = [204, 102, 0, 255]   # red/orange
+    rgba[mask_warn] = [255, 255, 0, 255]   # yellow
+    rgba[mask_good] = [0, 255, 0, 255]     # green
+
+    rgba[invalid] = [0, 0, 0, 0]            # transparent
+
+    Image.fromarray(rgba, mode="RGBA").save(out_path, "PNG")

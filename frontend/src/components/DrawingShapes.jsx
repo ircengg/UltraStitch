@@ -9,10 +9,10 @@ export default function DrawingShapes() {
     const newShape = useRecoilValue(newShapeAtom);
     const trRef = useRef();
 
+   
 
     return (
-        <Layer>
-
+        <>
             {/* SAVED SHAPES */}
             {drawing.shapes.map(shape => (<Shape shape={shape} />))}
 
@@ -30,10 +30,9 @@ export default function DrawingShapes() {
             {
                 newShape && <Shape shape={newShape} />
             }
-        </Layer>
+        </>
     );
 }
-
 
 
 
@@ -102,35 +101,57 @@ const Shape = ({ shape }) => {
 
     return <>
         {shape.type === "rect" && (
-            <Rect
-                x={shape.x}
-                y={shape.y}
-                stroke={isSelected ? "blue" : drawing.shapeFontColor}
-                strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
-                draggable={toolbar.scan_registration_mode && isSelected}
-                onClick={handleSelect}
-                onTap={handleSelect}
-                onDragMove={(e) => handleDragMove(shape.id, e)}
-                onTransformEnd={(e) => handleTransformEnd(shape.id, e)}
-                width={shape.width}
-                height={shape.height}
+            <>
+                <Rect
+                    x={shape.x}
+                    y={shape.y}
+                    stroke={isSelected ? "blue" : drawing.shapeFontColor}
+                    strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
+                    draggable={toolbar.scan_registration_mode && isSelected}
+                    onClick={handleSelect}
+                    onTap={handleSelect}
+                    onDragMove={(e) => handleDragMove(shape.id, e)}
+                    onTransformEnd={(e) => handleTransformEnd(shape.id, e)}
+                    width={shape.width}
+                    height={shape.height}
 
-            />
+                />
+                <Text
+                    x={shape.x}
+                    y={shape.y}
+                    text={`W:${shape.width}, H:${shape.height} mm`}
+                    fontSize={drawing.shapeFontSize}
+                    fill={drawing.shapeFontColor}
+                    offsetX={0}
+                    offsetY={120}
+                />
+            </>
         )}
 
         {shape.type === "circle" && (
-            <Circle
-                x={shape.x}
-                y={shape.y}
-                stroke={isSelected ? "blue" : drawing.shapeFontColor}
-                draggable={toolbar.scan_registration_mode && isSelected}
-                onClick={() => handleSelect(shape.id)}
-                onTap={() => handleSelect(shape.id)}
-                onDragMove={(e) => handleDragMove(shape.id, e)}
-                onTransformEnd={(e) => handleTransformEnd(shape.id, e)}
-                radius={shape.radius}
-                strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
-            />
+            <>
+                <Circle
+                    x={shape.x}
+                    y={shape.y}
+                    stroke={isSelected ? "blue" : drawing.shapeFontColor}
+                    draggable={toolbar.scan_registration_mode && isSelected}
+                    onClick={() => handleSelect(shape.id)}
+                    onTap={() => handleSelect(shape.id)}
+                    onDragMove={(e) => handleDragMove(shape.id, e)}
+                    onTransformEnd={(e) => handleTransformEnd(shape.id, e)}
+                    radius={shape.radius}
+                    strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
+                />
+                <Text
+                    x={shape.x}
+                    y={shape.y}
+                    text={`R:${shape.radius} mm`}
+                    fontSize={drawing.shapeFontSize}
+                    fill={drawing.shapeFontColor}
+                    offsetX={0}
+                    offsetY={0}
+                />
+            </>
         )}
 
         {shape.type === "polygon" && (
@@ -149,14 +170,6 @@ const Shape = ({ shape }) => {
                 strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
             />
         )}
-        <Text
-            x={shape.x}
-            y={shape.y}
-            text={`R:${shape.radius || ""}, W:${shape.width || ""}, H:${shape.height || ""} mm`}
-            fontSize={drawing.shapeFontSize}
-            fill={drawing.shapeFontColor}
-            offsetX={40}
-            offsetY={10}
-        />
+        
     </>
 }

@@ -7,7 +7,12 @@ import numpy as np
 import json
 from datetime import datetime
 from urllib.parse import quote
+import base64
 from backend.utils import numpy_to_json_list
+
+def encode_f32(arr: np.ndarray) -> str:
+    return base64.b64encode(arr.astype(np.float32).tobytes()).decode("ascii")
+
 
 def create_project(self, projectmeta):
     project_title = projectmeta.get("title", "Untitled")
@@ -103,26 +108,20 @@ def open_project(self):
         # ---------------------------------
         # THK DATA (registration output)
         # ---------------------------------
-        if "output" in h5 and "matrix" in h5["output"]:
-            matrix = h5["output/matrix"][()]
-            x_values = h5["output/x_values"][()]
-            y_values = h5["output/y_values"][()]
+        # if "output" in h5 and "matrix" in h5["output"]:
+        #     matrix = h5["output/matrix"][()].astype(np.float32)
+        #     x_values = h5["output/x_values"][()].astype(np.float32)
+        #     y_values = h5["output/y_values"][()].astype(np.float32)
 
-            thk_data = {
-                "matrix": numpy_to_json_list(matrix),
-                "x": numpy_to_json_list(x_values),
-                "y": numpy_to_json_list(y_values),
-            }
+        #     thk_data = {
+        #         "rows": matrix.shape[0],
+        #         "cols": matrix.shape[1],
+        #         "matrix_b64": encode_f32(matrix),
+        #         "x_b64": encode_f32(x_values),
+        #         "y_b64": encode_f32(y_values),
+        #     }
+
     
-    for scan in scans:
-        encoded_id = quote(f"{scan['id']}.png")
-        scan['map_link'] = f"http://127.0.0.1:{self.http_port}/scans/{encoded_id}"
-        
-    for r in reference:
-        encoded_map = quote(r['map'])
-        r['map_link'] = f"http://127.0.0.1:{self.http_port}/reference/{encoded_map}"       
-        
-    print(project)
 
     # 5. Return data the way React expects
     return {
@@ -131,7 +130,8 @@ def open_project(self):
         "scans": scans,
         "reference":reference,
         "measurement":measurement,
-        "thk_data": thk_data
+        "thk_data": thk_data,
+        "static_server_url": f"http://127.0.0.1:{self.http_port}"
     }
     
     

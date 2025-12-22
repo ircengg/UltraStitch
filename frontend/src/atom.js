@@ -8,6 +8,19 @@ export const thkDataAtom = atom({
 });
 
 
+export const registrationAtom = atom({
+  key: 'registrationAtom',
+  default: {
+
+  }
+});
+
+
+export const staticServerAtom = atom({
+  key: 'staticServerAtom',
+  default: null
+});
+
 
 
 
@@ -171,6 +184,7 @@ export const viewAtom = atom({
     scan_list: true,
     drawing_setting: false,
     scan_editor: false,
+    reference_editor:false,
     about: false
   }
 });

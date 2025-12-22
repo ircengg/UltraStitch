@@ -2,14 +2,15 @@
 import { Image as KonvaImage, Text } from "react-konva";
 import useImage from "use-image";
 import { useRecoilState } from "recoil";
-import { drawingAtom, scansAtom, selectedObjectAtom, toolbarAtom } from "../atom";
+import { drawingAtom, scansAtom, selectedObjectAtom, staticServerAtom, toolbarAtom } from "../atom";
 import { useRecoilValue } from "recoil";
 import { round } from "../utils";
 
 const ScanImage = ({ scan }) => {
+    const static_server_url = useRecoilValue(staticServerAtom);
     const drawing = useRecoilValue(drawingAtom);
-    const toolbar = useRecoilValue(toolbarAtom);
-    const [image] = useImage(scan.map_link || "/heatmap.jpg");
+    const toolbar = useRecoilValue(toolbarAtom);    
+    const [image] = useImage(`${static_server_url}/scans/${encodeURIComponent(scan.id)}.png` || "/heatmap.jpg"); 
     const [selected, setSelected] = useRecoilState(selectedObjectAtom);
     const [scans, setScans] = useRecoilState(scansAtom);
 

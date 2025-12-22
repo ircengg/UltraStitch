@@ -15,7 +15,7 @@ export default function HoverThickness({
     value,
     pointer,
     visible = false,
-    nominal = 25,
+    nominal,
     offset = { x: 16, y: 16 },
 }) {
     const [pos, setPos] = useState({ left: -9999, top: -9999 });
@@ -119,9 +119,6 @@ export default function HoverThickness({
                         <Text size="sm" weight={700} style={{ marginBottom: 2 }}>
                             Thickness
                         </Text>
-                        <Text size="xs" color="dimmed">
-                            Hover value (mm)
-                        </Text>
                     </div>
 
                     <div style={{ textAlign: "right" }}>
@@ -140,10 +137,23 @@ export default function HoverThickness({
                             }}
                         >
                             {display}
+                        </Badge>/
+                        <Badge
+                            variant="filled"
+                            fullWidth={false}
+                            style={{
+                                // background: bg,
+                                color: color,
+                                borderRadius: 8,
+                                fontSize: 14,
+                                padding: "6px 10px",
+                                minWidth: 64,
+                                boxShadow:
+                                    "0 4px 10px rgba(0,0,0,0.08), inset 0 -2px 0 rgba(0,0,0,0.06)",
+                            }}
+                        >
+                            {nominal}
                         </Badge>
-                        <Text size="xs" color="dimmed" style={{ marginTop: 6 }}>
-                            nominal {nominal} mm
-                        </Text>
                     </div>
                 </Group>
             </Paper>

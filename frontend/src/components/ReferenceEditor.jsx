@@ -10,13 +10,13 @@ import {
     FileButton,
 } from "@mantine/core";
 import { useRecoilState } from "recoil";
-import { scansAtom, viewAtom } from "../atom";
+import { referenceAtom, viewAtom } from "../atom";
 import { IconHttpDelete, IconDeviceFloppy, IconUpload, IconDownload } from "@tabler/icons-react";
 import Papa from "papaparse";
 import { VirtualTable } from "./VirtualTable";
 
-export function ScanEditor() {
-    const [rows, setRows] = useRecoilState(scansAtom);
+export function ReferenceEditor() {
+    const [rows, setRows] = useRecoilState(referenceAtom);
     const [view, setView] = useRecoilState(viewAtom)
 
     const updateRow = (index, field, value) => {
@@ -26,7 +26,7 @@ export function ScanEditor() {
     };
 
     const handleClose = () => {
-        setView({ ...view, scan_editor: false })
+        setView({ ...view, reference_editor: false })
     };
 
     const handleDelete = () => {
@@ -45,7 +45,7 @@ export function ScanEditor() {
         const a = document.createElement("a");
 
         a.href = url;
-        a.download = "scan_properties_export.csv";
+        a.download = "references.csv";
         a.click();
 
         URL.revokeObjectURL(url);
@@ -79,14 +79,14 @@ export function ScanEditor() {
 
 
 
-    if (!view.scan_editor) {
+    if (!view.reference_editor) {
         return null;
     }
 
     return <Modal
         opened={true}
         onClose={handleClose}
-        title="Edit Scans"
+        title="Edit References"
         size="100%"
         withCloseButton
         radius={10}

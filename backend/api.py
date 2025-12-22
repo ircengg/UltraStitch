@@ -17,12 +17,21 @@ from backend import scan
 from backend import license
 from backend import registration
 
+
+class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
+    """SimpleHTTPRequestHandler with CORS headers."""
+    def end_headers(self):
+        # Allow all origins (or specify your domain)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        super().end_headers()
+
 class API:
     def __init__(self):        
         self.project_dir = None
         self.httpd = None
         self.http_port = 8100  # any free port
         self.http_thread = None
+        
     def ping(self):
         return "API OK"
     
@@ -50,7 +59,7 @@ class API:
 
         # Handler bound to directory (no chdir)
         handler = functools.partial(
-            http.server.SimpleHTTPRequestHandler,
+            CORSRequestHandler,
             directory=folder_path
         )
 
@@ -114,6 +123,7 @@ class API:
     register_scans = registration.register_scans
     export_registration = registration.export_registration
     get_registered_data = registration.export_registration
+    getThicknessAt = registration.getThicknessAt
     
     #-------License-----------
     getLicence = license.getLicence

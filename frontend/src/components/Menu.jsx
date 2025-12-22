@@ -1,7 +1,7 @@
 import { Menu, Button, Group, ActionIcon, CheckIcon } from '@mantine/core';
 import { useSetRecoilState } from 'recoil';
 import { useApi } from '../hooks/useApi';
-import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom, thkDataAtom, viewAtom } from '../atom';
+import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, registrationAtom, scansAtom, thkDataAtom, viewAtom } from '../atom';
 import { useRecoilState } from 'recoil';
 import { IconBrandSupernova } from '@tabler/icons-react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
@@ -15,7 +15,7 @@ export default function Menubar() {
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
     const [reference, setReference] = useRecoilState(referenceAtom);
     const [measurement, setMeasurement] = useRecoilState(mesurementAtom);
-    const setThkData = useSetRecoilState(thkDataAtom);
+    const [registration, setRegistration] = useRecoilState(registrationAtom);  
 
     const [view, setView] = useRecoilState(viewAtom);
     const setMenuEvent = useSetRecoilState(menuEventAtom)
@@ -74,10 +74,10 @@ export default function Menubar() {
     }
 
     const register_scans = async () => {
-        const res = await api("register_scans");
+        const res = await api("register_scans", drawing.gridStep);
         if (res) {
             console.log(res);
-            setThkData(res);
+            setRegistration({...registration, ...res});           
         }
     }
 
@@ -133,6 +133,7 @@ export default function Menubar() {
                 <Menu.Dropdown>
                     <CheckMenu title={"Scan List"} name={"scan_list"} />
                     <CheckMenu title={"Scan Editor"} name={"scan_editor"} />
+                    <CheckMenu title={"Reference Editor"} name={"reference_editor"} />
                     <CheckMenu title={"Drawing Setings"} name={"drawing_setting"} />
                 </Menu.Dropdown>
             </Menu>

@@ -21,6 +21,7 @@
     "react-draggable": "^4.4.6",
     "react-konva": "^18.2.14",
     "react-router-dom": "^6.6.1",
+    "react-window": "^2.2.3",
     "react-zoom-pan-pinch": "^3.7.0",
     "recoil": "^0.7.6",
     "use-image": "^1.1.4"
