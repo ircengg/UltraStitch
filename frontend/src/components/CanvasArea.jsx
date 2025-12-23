@@ -4,7 +4,7 @@ import { Box } from "@mantine/core";
 import useImage from "use-image";
 import { useEffect } from "react";
 import { useRecoilState } from "recoil";
-import { drawingAtom, mesurementAtom, newMesaurementAtom, newShapeAtom, projectAtom, referenceAtom, scansAtom, selectedObjectAtom, selectedScanAtom, thkDataAtom, toolbarAtom } from "../atom";
+import { drawingAtom, mesurementAtom, newMesaurementAtom, newShapeAtom, projectAtom, referenceAtom, scansAtom, selectedObjectAtom, selectedScanAtom, shapeAtom, thkDataAtom, toolbarAtom } from "../atom";
 import Grid from "./Grid";
 import { Measurements } from "./Measurements";
 import { useRecoilValue } from "recoil";
@@ -32,6 +32,7 @@ export default function CanvasArea() {
     const [toolbar, setToolbar] = useRecoilState(toolbarAtom);
     const [measurements, setMeasurements] = useRecoilState(mesurementAtom);
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
+    const [shapes, setShapes] = useRecoilState(shapeAtom);
 
     const thkData = useRecoilValue(thkDataAtom);
 
@@ -320,10 +321,7 @@ export default function CanvasArea() {
 
     const handleMouseUp = () => {
         if (!newShape) return;
-        setDrawing(d => ({
-            ...d,
-            shapes: [...d.shapes, newShape]
-        }));
+        setShapes([...shapes, newShape]);
         setNewShape(null)
     };
 
@@ -388,6 +386,7 @@ export default function CanvasArea() {
                             return s.id != selectedObj.obj?.id
                         })
                     }));
+                    setShapes(shapes.filter(s => s.id != selectedObj.obj?.id))
                 }
                 if (selectedObj.type == "reference") {
                     setReferences(prev => prev.filter(p => p.id != selectedObj.obj?.id));

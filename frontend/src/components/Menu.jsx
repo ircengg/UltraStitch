@@ -1,7 +1,7 @@
 import { Menu, Button, Group, ActionIcon, CheckIcon } from '@mantine/core';
 import { useSetRecoilState } from 'recoil';
 import { useApi } from '../hooks/useApi';
-import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, registrationAtom, scansAtom, thkDataAtom, viewAtom } from '../atom';
+import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, registrationAtom, scansAtom, shapeAtom, thkDataAtom, viewAtom } from '../atom';
 import { useRecoilState } from 'recoil';
 import { IconBrandSupernova } from '@tabler/icons-react';
 import { IconDeviceFloppy } from '@tabler/icons-react';
@@ -15,12 +15,11 @@ export default function Menubar() {
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
     const [reference, setReference] = useRecoilState(referenceAtom);
     const [measurement, setMeasurement] = useRecoilState(mesurementAtom);
-    const [registration, setRegistration] = useRecoilState(registrationAtom);  
+    const [registration, setRegistration] = useRecoilState(registrationAtom);
+    const [shapes, setShapes] = useRecoilState(shapeAtom);
 
     const [view, setView] = useRecoilState(viewAtom);
-    const setMenuEvent = useSetRecoilState(menuEventAtom)
-
-
+  
     const handleProjectOpen = async () => {
         const res = await api("open_project");
         console.log(res)
@@ -30,7 +29,7 @@ export default function Menubar() {
             setScans(res.scans)
             setReference(res.reference);
             setMeasurement(res.measurement)
-
+            setShapes(res.annotation)
         }
     };
 
@@ -41,8 +40,10 @@ export default function Menubar() {
             scans,
             drawing,
             reference,
-            measurement
+            measurement,
+            annotation: shapes
         }
+        console.log("payload: ", payload)
         const res = await api("save_project", payload);
         if (res) {
             console.log(res)
@@ -77,7 +78,7 @@ export default function Menubar() {
         const res = await api("register_scans", drawing.gridStep);
         if (res) {
             console.log(res);
-            setRegistration({...registration, ...res});           
+            setRegistration({ ...registration, ...res });
         }
     }
 

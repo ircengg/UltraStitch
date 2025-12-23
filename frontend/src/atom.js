@@ -79,6 +79,11 @@ export const mesurementAtom = atom({
   default: []
 });
 
+export const shapeAtom = atom({
+  key: 'shapeAtom',
+  default: []
+});
+
 
 
 export const drawingAtom = atom({

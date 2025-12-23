@@ -18,11 +18,11 @@ const Cell = memo(function Cell({ row, column, onCommit }) {
     if (column.type === "number") {
         return (
             <NumberInput
-                defaultValue={value ?? 0}
+                value={value ?? 0}
                 hideControls
                 w={column.width || 120}
-                onBlur={(e) =>
-                    onCommit(column.key, Number(e.target.value))
+                onChange={(val) =>
+                    onCommit(column.key, Number(val) || 0)
                 }
             />
         );
@@ -30,14 +30,15 @@ const Cell = memo(function Cell({ row, column, onCommit }) {
 
     return (
         <TextInput
-            defaultValue={value ?? ""}
+            value={value ?? ""}
             w={column.width || 160}
-            onBlur={(e) =>
+            onChange={(e) =>
                 onCommit(column.key, e.target.value)
             }
         />
     );
 });
+
 
 /* -------------------------
    Header (STICKY)

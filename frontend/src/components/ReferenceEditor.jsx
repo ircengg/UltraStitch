@@ -17,13 +17,7 @@ import { VirtualTable } from "./VirtualTable";
 
 export function ReferenceEditor() {
     const [rows, setRows] = useRecoilState(referenceAtom);
-    const [view, setView] = useRecoilState(viewAtom)
-
-    const updateRow = (index, field, value) => {
-        const updated = [...rows];
-        updated[index] = { ...updated[index], [field]: value };
-        setRows(updated);
-    };
+    const [view, setView] = useRecoilState(viewAtom);
 
     const handleClose = () => {
         setView({ ...view, reference_editor: false })
@@ -61,9 +55,6 @@ export function ReferenceEditor() {
             complete: (results) => {
                 const imported = results.data.map((row) => ({
                     ...row,
-                    nominal_thk: Number(row.nominal_thk) || 0,
-                    min_thk: Number(row.min_thk) || 0,
-                    max_thk: Number(row.max_thk) || 0,
                     x: Number(row.x) || 0,
                     y: Number(row.y) || 0,
                     width: Number(row.width) || 0,
@@ -76,6 +67,10 @@ export function ReferenceEditor() {
             },
         });
     };
+
+    const handleImportImages = async () => {
+        console.log("images")
+    }
 
 
 
@@ -96,15 +91,13 @@ export function ReferenceEditor() {
             rows={rows}
             setRows={setRows}
             columns={[
-                { key: "scan_details", type: "text" },
-                { key: "nominal_thk", type: "number" },
-                { key: "min_thk", type: "number" },
-                { key: "max_thk", type: "number" },
-                { key: "x", type: "number" },
-                { key: "y", type: "number" },
-                { key: "width", type: "number" },
-                { key: "height", type: "number" },
-                { key: "rotation", type: "number" },
+                { key: "id", type: "text", width: 160 },
+                { key: "x", type: "number", width: 120 },
+                { key: "y", type: "number", width: 120 },
+                { key: "width", type: "number", width: 120 },
+                { key: "height", type: "number", width: 120 },
+                { key: "rotation", type: "number", width: 120 },
+                { key: "map", type: "text", width: 200 },
             ]}
         />
 
@@ -112,6 +105,15 @@ export function ReferenceEditor() {
         {/* FOOTER BUTTONS */}
         <Group justify="space-between" mt="md">
             <Group>
+                {/* IMPORT CSV */}
+                <FileButton onChange={handleImportImages} accept=".png,.jpg">
+                    {(props) => (
+                        <Button leftSection={<IconUpload />} {...props}>
+                            Import Images
+                        </Button>
+                    )}
+                </FileButton>
+
                 {/* IMPORT CSV */}
                 <FileButton onChange={handleImportCSV} accept=".csv">
                     {(props) => (

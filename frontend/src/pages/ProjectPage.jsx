@@ -6,7 +6,7 @@ import {
     Text,
 } from "@mantine/core";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom, staticServerAtom, thkDataAtom } from "../atom";
+import { drawingAtom, menuEventAtom, mesurementAtom, projectAtom, referenceAtom, scansAtom, shapeAtom, staticServerAtom, thkDataAtom } from "../atom";
 import { useApi } from "../hooks/useApi";
 import { useEffect } from "react";
 import { useRecoilValue } from "recoil";
@@ -25,6 +25,7 @@ export default function ProjectPage() {
     const setMeasurement = useSetRecoilState(mesurementAtom)
     const setStaticServerUrl = useSetRecoilState(staticServerAtom);
     const setThkData = useSetRecoilState(thkDataAtom);
+    const setShapes = useSetRecoilState(shapeAtom);
 
     const [newProject, setNewProject] = useState({
         title: "Untitled",
@@ -40,7 +41,8 @@ export default function ProjectPage() {
             setDrawing(res.drawing)
             setReference(res.reference);
             setMeasurement(res.measurement);
-            setStaticServerUrl(res.static_server_url)
+            setStaticServerUrl(res.static_server_url);
+            setShapes(res.annotation)
         }
     };
 
@@ -55,6 +57,7 @@ export default function ProjectPage() {
             setReference(res.reference);
             setMeasurement(res.measurement);
             setThkData(res.thk_data);
+            setShapes(res.annotation)
             setStaticServerUrl(res.static_server_url);
 
         }

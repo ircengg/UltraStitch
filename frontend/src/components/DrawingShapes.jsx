@@ -1,20 +1,20 @@
 import { useRef } from "react";
 import { Layer, Rect, Circle, Line, Transformer, Text } from "react-konva";
 import { useRecoilState } from "recoil";
-import { drawingAtom, newShapeAtom, selectedObjectAtom, toolbarAtom } from "../atom";
+import { drawingAtom, newShapeAtom, selectedObjectAtom, shapeAtom, toolbarAtom } from "../atom";
 import { useRecoilValue } from "recoil";
 
 export default function DrawingShapes() {
-    const [drawing, setDrawing] = useRecoilState(drawingAtom);
+    const shapes = useRecoilValue(shapeAtom);
     const newShape = useRecoilValue(newShapeAtom);
     const trRef = useRef();
 
-   
+
 
     return (
         <>
             {/* SAVED SHAPES */}
-            {drawing.shapes.map(shape => (<Shape shape={shape} />))}
+            {shapes.map(shape => (<Shape shape={shape} />))}
 
             {/* TRANSFORMER */}
             <Transformer
@@ -39,6 +39,7 @@ export default function DrawingShapes() {
 
 const Shape = ({ shape }) => {
     const [drawing, setDrawing] = useRecoilState(drawingAtom);
+    const [shapes, setShapes] = useRecoilState(shapeAtom);
     const [toolbar] = useRecoilState(toolbarAtom);
     const [selected, setSelected] = useRecoilState(selectedObjectAtom);
     const isSelected = (selected.type == "shape" && selected?.obj?.id == shape.id)
@@ -54,46 +55,35 @@ const Shape = ({ shape }) => {
     const handleDragMove = (id, e) => {
         const node = e.target;
         const { x, y } = node.position();
-
-        setDrawing((d) => ({
-            ...d,
-            shapes: d.shapes.map(s =>
-                s.id === id ? { ...s, x, y } : s
-            ),
-        }));
+        setShapes(shapes.map(s => s.id === id ? { ...s, x, y } : s));
     };
 
     const handleTransformEnd = (id, e) => {
         const node = e.target;
+        setShapes(shapes.map(s => {
+            if (s.id !== id) return s;
 
-        setDrawing((d) => ({
-            ...d,
-            shapes: d.shapes.map(s => {
-                if (s.id !== id) return s;
+            if (s.type === "rect") {
+                return {
+                    ...s,
+                    x: node.x(),
+                    y: node.y(),
+                    width: node.width() * node.scaleX(),
+                    height: node.height() * node.scaleY(),
+                };
+            }
 
-                if (s.type === "rect") {
-                    return {
-                        ...s,
-                        x: node.x(),
-                        y: node.y(),
-                        width: node.width() * node.scaleX(),
-                        height: node.height() * node.scaleY(),
-                    };
-                }
+            if (s.type === "circle") {
+                return {
+                    ...s,
+                    x: node.x(),
+                    y: node.y(),
+                    radius: node.radius() * node.scaleX(),
+                };
+            }
 
-                if (s.type === "circle") {
-                    return {
-                        ...s,
-                        x: node.x(),
-                        y: node.y(),
-                        radius: node.radius() * node.scaleX(),
-                    };
-                }
-
-                return s;
-            }),
+            return s;
         }));
-
         node.scaleX(1);
         node.scaleY(1);
     };
@@ -170,6 +160,6 @@ const Shape = ({ shape }) => {
                 strokeWidth={isSelected ? drawing.shapeLineSize * 2 : drawing.shapeLineSize}
             />
         )}
-        
+
     </>
 }

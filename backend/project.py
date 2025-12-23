@@ -43,11 +43,13 @@ def create_project(self, projectmeta):
     scans = []
     reference = []
     measurement = []
+    annotation = []
     projectmeta["created_at"] = datetime.now().isoformat()
 
     with h5py.File(project_file_path, "w") as h5:
         h5.create_dataset("meta/project", data=json.dumps(projectmeta).encode("utf-8"))
         h5.create_dataset("meta/drawing", data=json.dumps(drawing).encode("utf-8"))
+        h5.create_dataset("meta/annotation", data=json.dumps(annotation).encode("utf-8"))
         h5.create_dataset("meta/scans", data=json.dumps(scans).encode("utf-8"))
         h5.create_dataset("meta/reference", data=json.dumps(reference).encode("utf-8"))
         h5.create_dataset("meta/measurement", data=json.dumps(measurement).encode("utf-8"))    
@@ -57,7 +59,8 @@ def create_project(self, projectmeta):
         "scans": scans,
         "drawing": drawing,
         "reference":reference,
-        "measurement": measurement
+        "measurement": measurement,
+        "annotation": annotation
     }
 
 
@@ -93,36 +96,22 @@ def open_project(self):
     scans = []
     reference = []
     measurement = []
-    thk_data = None
+    annotation = []
+   
 
     # 4. Read HDF5 project metadata
     with h5py.File(project_file_path, "r") as h5:
         project = json.loads(h5["meta/project"][()].decode("utf-8"))
         drawing = json.loads(h5["meta/drawing"][()].decode("utf-8"))
         scans = json.loads(h5["meta/scans"][()].decode("utf-8"))
+        if "annotation" in h5["meta"]:
+            annotation = json.loads(h5["meta/annotation"][()].decode("utf-8"))        
         if "reference" in h5["meta"]:
             reference = json.loads(h5["meta/reference"][()].decode("utf-8"))
         if "measurement" in h5["meta"]:
             measurement = json.loads(h5["meta/measurement"][()].decode("utf-8"))
             
-        # ---------------------------------
-        # THK DATA (registration output)
-        # ---------------------------------
-        # if "output" in h5 and "matrix" in h5["output"]:
-        #     matrix = h5["output/matrix"][()].astype(np.float32)
-        #     x_values = h5["output/x_values"][()].astype(np.float32)
-        #     y_values = h5["output/y_values"][()].astype(np.float32)
-
-        #     thk_data = {
-        #         "rows": matrix.shape[0],
-        #         "cols": matrix.shape[1],
-        #         "matrix_b64": encode_f32(matrix),
-        #         "x_b64": encode_f32(x_values),
-        #         "y_b64": encode_f32(y_values),
-        #     }
-
-    
-
+       
     # 5. Return data the way React expects
     return {
         "project": project,
@@ -130,7 +119,7 @@ def open_project(self):
         "scans": scans,
         "reference":reference,
         "measurement":measurement,
-        "thk_data": thk_data,
+        "annotation":annotation,       
         "static_server_url": f"http://127.0.0.1:{self.http_port}"
     }
     
@@ -148,6 +137,7 @@ def save_project(self, projectmeta):
     scans = projectmeta.get("scans", [])
     reference = projectmeta.get("reference", [])
     measurement = projectmeta.get("measurement", [])
+    annotation = projectmeta.get("annotation", [])
 
     # ---- Save metadata to HDF5 ---- #
     with h5py.File(project_file_path, "a") as h5:
@@ -156,7 +146,8 @@ def save_project(self, projectmeta):
             ("meta/drawing", drawing),
             ("meta/scans", scans),
             ("meta/reference", reference),
-            ("meta/measurement", measurement)
+            ("meta/measurement", measurement),
+            ("meta/annotation", annotation)
         ]:
             if key in h5:
                 del h5[key]
