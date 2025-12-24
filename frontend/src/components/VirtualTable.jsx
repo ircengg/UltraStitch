@@ -7,6 +7,7 @@ import {
     Group,
     Box,
     Text,
+    Textarea,
 } from "@mantine/core";
 
 /* -------------------------
@@ -26,6 +27,16 @@ const Cell = memo(function Cell({ row, column, onCommit }) {
                 }
             />
         );
+    }
+
+    if (column.type == "long_text") {
+        return <Textarea
+            value={value ?? ""}
+            w={column.width || 160}
+            onChange={(e) =>
+                onCommit(column.key, e.target.value)
+            }
+        />
     }
 
     return (

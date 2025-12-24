@@ -16,11 +16,10 @@ export default function ProjectPage() {
     const menuEvent = useRecoilValue(menuEventAtom)
     const { api } = useApi();
 
-    const [projectName, setProjectName] = useState("");
-    const [directoryPath, setDirectoryPath] = useState("");
+
     const [project, setProject] = useRecoilState(projectAtom);
     const setScans = useSetRecoilState(scansAtom);
-    const setDrawing = useSetRecoilState(drawingAtom);
+    const [drawing, setDrawing] = useRecoilState(drawingAtom);
     const setReference = useSetRecoilState(referenceAtom);
     const setMeasurement = useSetRecoilState(mesurementAtom)
     const setStaticServerUrl = useSetRecoilState(staticServerAtom);
@@ -34,7 +33,11 @@ export default function ProjectPage() {
 
 
     const handleCreate = async () => {
-        const res = await api("create_project", newProject);
+        const payload = {
+            "project": newProject,
+            "drawing":drawing
+        }
+        const res = await api("create_project", payload);
         if (res) {
             setProject(res.project)
             setScans(res.scans)
@@ -64,7 +67,7 @@ export default function ProjectPage() {
     };
 
     const onInputChange = (key, value) => {
-        console.log(key, value)
+        // console.log(key, value)
         setNewProject({ ...newProject, [key]: value })
     };
 

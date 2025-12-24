@@ -65,7 +65,8 @@ export default function Menubar() {
     const handle_scan_process = async () => {
         const res = await api("process_scans", scans);
         if (res) {
-            console.log(res)
+            setScans(res);
+            // console.log(res)
         }
     }
 

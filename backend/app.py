@@ -1,11 +1,18 @@
+# env = "dev"
+env = "prod"
+
+
+
+
 # app.py
 import webview
 from backend.api import API
 from backend.license import validate_license, start_background_checker
+from backend import utils
 import os
 
 os.environ["PYWEBVIEW_GUI"] = "qt"
-env = os.getenv("ENV", "development")
+debug =  env == "dev"
 
 
 def on_license_fail(result):
@@ -22,10 +29,9 @@ def on_license_fail(result):
 def get_entrypoint():
     if env == "development":
         return "http://localhost:5173/"
-
     base = os.path.dirname(__file__)
-    p1 = os.path.join(base, "./dist/index.html")
-    p2 = os.path.join(base, "./gui/index.html")
+    p1 =   os.path.join(utils.get_app_dir(), "dist", "index.html")
+    p2 =   os.path.join(utils.get_app_dir(), "gui", "index.html")
 
     if os.path.exists(p1):
         return p1
@@ -78,11 +84,15 @@ def app():
             "UltraStitch",
             entry,
             width=1200,
-            height=800,
-            easy_drag=False,
+            height=800,  
+            resizable=True,         
             js_api=api,
             text_select=True,
+            frameless=False,
+            easy_drag=False,
+            confirm_close=False            
         )
 
     # 🔴 IMPORTANT: START WEBVIEW ONLY ONCE
-    webview.start(debug=(env == "development"), gui="edgechromium", ssl=True)
+    webview.start(debug=debug, gui="edgechromium", ssl=False, http_server=True)
+    

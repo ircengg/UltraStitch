@@ -2,20 +2,21 @@
 import webview
 import h5py
 import os
-import glob
 import numpy as np
 import json
 from datetime import datetime
 from urllib.parse import quote
 import base64
-from backend.utils import numpy_to_json_list
+
 
 def encode_f32(arr: np.ndarray) -> str:
     return base64.b64encode(arr.astype(np.float32).tobytes()).decode("ascii")
 
 
 def create_project(self, projectmeta):
-    project_title = projectmeta.get("title", "Untitled")
+    project = projectmeta.get("project", {})
+    drawing = projectmeta.get("drawing", {})
+    project_title = project.get("title", "Untitled")
     window = self.main_window()
     result = window.create_file_dialog(webview.FOLDER_DIALOG)
     if not result:
@@ -29,25 +30,16 @@ def create_project(self, projectmeta):
     self.project_file = project_title
     
     os.makedirs(os.path.join(folder_path, "scans"), exist_ok=True)
-    os.makedirs(os.path.join(folder_path, "reference"), exist_ok=True)
-
-    drawing = {
-        "fontSize": 200,
-        "fontColor": "#bf0d0d",
-        "surfaceHeight": 14000,
-        "surfaceWidth": 65000,
-        "gridStep": 100,
-        "scanOpacity": 40,
-    }
+    os.makedirs(os.path.join(folder_path, "reference"), exist_ok=True)   
 
     scans = []
     reference = []
     measurement = []
     annotation = []
-    projectmeta["created_at"] = datetime.now().isoformat()
+    project["created_at"] = datetime.now().isoformat()
 
     with h5py.File(project_file_path, "w") as h5:
-        h5.create_dataset("meta/project", data=json.dumps(projectmeta).encode("utf-8"))
+        h5.create_dataset("meta/project", data=json.dumps(project).encode("utf-8"))
         h5.create_dataset("meta/drawing", data=json.dumps(drawing).encode("utf-8"))
         h5.create_dataset("meta/annotation", data=json.dumps(annotation).encode("utf-8"))
         h5.create_dataset("meta/scans", data=json.dumps(scans).encode("utf-8"))
@@ -55,7 +47,7 @@ def create_project(self, projectmeta):
         h5.create_dataset("meta/measurement", data=json.dumps(measurement).encode("utf-8"))    
 
     return {
-        "project": projectmeta,
+        "project": project,
         "scans": scans,
         "drawing": drawing,
         "reference":reference,
@@ -163,78 +155,3 @@ def save_project(self, projectmeta):
 
 
 
-
-    
-# ---------------------------------------------------------
-# OPEN PROJECT + Auto-generate Heatmaps if missing
-# ---------------------------------------------------------
-# def open_project(self):
-#     window = self.main_window()
-#     try:
-#         result = window.create_file_dialog(
-#             dialog_type=webview.OPEN_DIALOG,
-#             allow_multiple=False,
-#             file_types=('UltraScan Project (*.proj)',)
-#         )
-
-#         if not result:
-#             return {"success": False, "cancelled": True}
-
-#         project_file = result[0]
-
-#         # Load JSON
-#         with open(project_file, "r") as f:
-#             project = json.load(f)
-
-#         # Project folder:
-#         project_dir = os.path.dirname(project_file)
-#         self.project_dir = project_dir
-        
-#         # Start server for this project
-#         self.start_file_server(project_dir)
-
-#         scans_folder = os.path.join(project_dir, "scans")
-#         os.makedirs(scans_folder, exist_ok=True)
-
-#         scans = project.get("scans", [])
-
-#         # Process all scans and attach missing heatmaps
-#         for scan in scans:
-#             scan_name = scan.get("name")
-#             if not scan_name:
-#                 continue
-
-#             scan_csv = os.path.join(scans_folder, f"{scan_name}.csv")
-#             scan_xlsx = os.path.join(scans_folder, f"{scan_name}.xlsx")
-
-#             # choose CSV or Excel
-#             if os.path.exists(scan_csv):
-#                 df = self._load_csv(scan_csv)
-#             elif os.path.exists(scan_xlsx):
-#                 df = self._load_excel(scan_xlsx)
-#             else:
-#                 continue
-
-#             # If scan has no map => create one
-#             if "map" not in scan or not scan["map"]:
-#                 map_filename = f"{scan_name}_map.png"
-#                 map_filepath = os.path.join(scans_folder, map_filename)
-
-#                 self._create_heatmap(df, map_filepath)
-#                 rel = os.path.relpath(map_filepath, self.project_dir).replace("\\", "/")
-#                 scan["map_url"] = f"http://127.0.0.1:{self.http_port}/{rel}"
-#                 scan["map"] = map_filename
-
-#         # Save project back (updated maps)
-#         with open(project_file, "w") as f:
-#             json.dump(project, f, indent=4)
-            
-
-#         return {
-#             "success": True,
-#             "project": project,
-#             "project_path": project_file
-#         }
-
-#     except Exception as e:
-#         return {"success": False, "error": str(e)}

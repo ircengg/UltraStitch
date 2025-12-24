@@ -27,16 +27,19 @@ def getThicknessAt(self, pos={}):
     """
     x = pos.get("x")
     y = pos.get("y")
+    
+    print(pos)
+    print("project_file_path: ", self.project_file_path)
 
     if not self.project_file_path:
         return None
 
     try:
         with h5py.File(self.project_file_path, "r") as h5:
-            if "output" not in h5 or "matrix" not in h5["output"]:
+            if "output" not in h5 or "thickness" not in h5["output"]:
                 return None
 
-            matrix = h5["output/matrix"]
+            thickness = h5["output/thickness"]
             nominal_thickness = h5["output/nominal_thickness"]
             x_vals = h5["output/x_values"]
             y_vals = h5["output/y_values"]
@@ -44,8 +47,10 @@ def getThicknessAt(self, pos={}):
             col = _find_index(x_vals, x)
             row = _find_index(y_vals, y)
 
-            value = float(matrix[row, col])
+            value = float(thickness[row, col])
             nominal = float(nominal_thickness[row, col])
+            
+            print(row, col, value, nominal)
 
             if np.isnan(value):
                 return None
@@ -172,7 +177,7 @@ def register_scans(self, cell_size=10):
     # Use average nominal thickness if grid varies
     nominal_for_image = np.nanmean(reference_nom)
 
-    img_path = os.path.join(registration_dir, "thickness_map.png")
+    img_path = os.path.join(registration_dir, "registration_map.png")
     save_heatmap_from_matrix(
         reference_thk,
         img_path,
@@ -194,7 +199,7 @@ def export_registration(self):
     # Load / compute data
     need_register = False
     with h5py.File(project_file_path, "r") as h5:
-        if "output/matrix" not in h5:
+        if "output/thickness" not in h5:
             need_register = True
 
     if need_register:
@@ -203,7 +208,7 @@ def export_registration(self):
     else:
         print("Loading registration from HDF5")
         with h5py.File(project_file_path, "r") as h5:
-            matrix = h5["output/matrix"][()]
+            matrix = h5["output/thickness"][()]
             x_values = h5["output/x_values"][()]
             y_values = h5["output/y_values"][()]
 
@@ -247,7 +252,7 @@ def get_registered_scans(self):
     need_register = False
 
     with h5py.File(project_file_path, "r") as h5:
-        if "output/matrix" not in h5:
+        if "output/thickness" not in h5:
             need_register = True
 
     # Auto run registration if missing
@@ -257,7 +262,7 @@ def get_registered_scans(self):
     else:
         print("Registration available → loading...")
         with h5py.File(project_file_path, "r") as h5:
-            matrix = h5["output/matrix"][()]
+            matrix = h5["output/thickness"][()]
             x_values = h5["output/x_values"][()]
             y_values = h5["output/y_values"][()]
 

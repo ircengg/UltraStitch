@@ -1,12 +1,7 @@
-import os
-import json
-import uuid
+
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import webview
-from datetime import datetime
-
 import http.server
 import socketserver
 import threading
@@ -159,28 +154,7 @@ class API:
     # ---------------------------------------------------------
     # Heatmap Generator (PNG)
     # ---------------------------------------------------------
-    def _create_heatmap(self, df: pd.DataFrame, output_file: str):
-        """
-        df:
-        Distance_mm | Probe1 | Probe2 | Probe3 ...
-
-        Heatmap = probes (X) vs distance (Y)
-        """
-
-        try:
-            probe_columns = df.columns[1:]
-            data = df[probe_columns].to_numpy()
-
-            plt.figure(figsize=(6, 6), dpi=170)
-            plt.imshow(data, aspect="auto")
-            plt.colorbar(label="Thickness")
-            plt.title("Thickness Map")
-            plt.tight_layout()
-
-            plt.savefig(output_file)
-            plt.close()
-        except Exception as e:
-            print("Heatmap generation failed:", e)
+   
             
     def open_file_dialog(self, options):
         window = self.main_window()

@@ -96,7 +96,7 @@ export function ScanEditor() {
             rows={rows}
             setRows={setRows}
             columns={[
-                { key: "scan_details", type: "text" },
+                { key: "scan_details", type: "long_text" },
                 { key: "nominal_thk", type: "number" },
                 { key: "min_thk", type: "number" },
                 { key: "max_thk", type: "number" },

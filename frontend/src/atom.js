@@ -114,8 +114,7 @@ export const drawingAtom = atom({
     showShapes: true,
     shapeOpacity: 80,
     shapeFontSize: 89,
-    shapeFontColor: "#bf0d0d",
-    shapes: [], // <--- ALL SHAPES STORED HERE
+    shapeFontColor: "#bf0d0d",    
     shapeLineSize: 10,
     ShapeColor: "#bf0d0d",
 

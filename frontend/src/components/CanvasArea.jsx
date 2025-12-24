@@ -377,15 +377,7 @@ export default function CanvasArea() {
                 if (selectedObj.type == "dimension") {
                     setMeasurements(prev => prev.filter(p => p.id != selectedObj.obj?.id));
                 }
-                if (selectedObj.type == "shape") {
-                    setDrawing(d => ({
-                        ...d,
-                        'shapes': d.shapes.filter(s => {
-                            // console.log(s.id)
-                            // console.log(selectedObj.obj?.id)
-                            return s.id != selectedObj.obj?.id
-                        })
-                    }));
+                if (selectedObj.type == "shape") {                  
                     setShapes(shapes.filter(s => s.id != selectedObj.obj?.id))
                 }
                 if (selectedObj.type == "reference") {

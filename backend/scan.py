@@ -3,10 +3,10 @@ import json
 import shutil
 import h5py
 import webview
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
+import time
 
 def import_scans(self):
     window = self.main_window()
@@ -98,6 +98,9 @@ def process_scans(self, scans):
         save_heatmap_fast(csv_path, png_path, scan["nominal_thk"])
 
         print(f"✔ Heatmap saved: {png_path}")
+        # 🔥 IMPORTANT: update timestamp AFTER PNG is regenerated
+        scan["updatedAt"] = int(time.time() * 1000)
+    return scans
         
 
 

@@ -6,11 +6,18 @@ import { drawingAtom, scansAtom, selectedObjectAtom, staticServerAtom, toolbarAt
 import { useRecoilValue } from "recoil";
 import { round } from "../utils";
 
-const ScanImage = ({ scan }) => {
+const ScanImage = ({ scan }) => {  
+
     const static_server_url = useRecoilValue(staticServerAtom);
     const drawing = useRecoilValue(drawingAtom);
-    const toolbar = useRecoilValue(toolbarAtom);    
-    const [image] = useImage(`${static_server_url}/scans/${encodeURIComponent(scan.id)}.png` || "/heatmap.jpg"); 
+    const toolbar = useRecoilValue(toolbarAtom);
+
+    const imageUrl = `${static_server_url}/scans/${encodeURIComponent(
+        scan.id
+    )}.png?v=${scan.updatedAt}`;
+    
+    const [image] = useImage(imageUrl, "anonymous");
+    const [placeholder] = useImage("/heatmap.jpg");
     const [selected, setSelected] = useRecoilState(selectedObjectAtom);
     const [scans, setScans] = useRecoilState(scansAtom);
 
@@ -91,7 +98,7 @@ const ScanImage = ({ scan }) => {
         <KonvaImage
             id={`scan-${scan.id}`}
             // ref={imgRef}
-            image={image}
+            image={image || placeholder}
             x={scan.x}
             y={scan.y}
             width={scan.width || 500}
