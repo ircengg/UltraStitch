@@ -1,42 +1,44 @@
-import { ActionIcon, Button, Group, ScrollArea, Stack, Title, Box, Collapse, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Group,  Stack } from "@mantine/core";
 
 import { useState } from "react";
-import { scansAtom, selectedObjectAtom, toolbarAtom, viewAtom } from "../atom";
+import {  referenceAtom,  selectedObjectAtom, toolbarAtom, viewAtom } from "../atom";
 import { Card, Text } from "@mantine/core";
+
 import { useRecoilState } from "recoil";
 import { useEffect } from "react";
 import { useRef } from "react";
 import Panel from "./Panel";
 import { IconEdit } from "@tabler/icons-react";
 import FormRenderer from "./FormRenderer";
-import { debounce } from "../utils";
 
 
 
 
-
-export default function ScanList() {
-  const [scans, setScans] = useRecoilState(scansAtom);
+export default function ReferenceList() {
+  const [reference, setReference] = useRecoilState(referenceAtom);
   const [view, setView] = useRecoilState(viewAtom);
-  const [editingId, setEditingId] = useState(null);
+
+  const [editingItem, setEditingItem] = useState(null);
   const [draft, setDraft] = useState(null);
-  const [search, setSearch] = useState("");
 
-  if (!view.scan_list) return null;
+  const onClose = () =>
+    setView({ ...view, reference_list: false });
 
-  const startEdit = (scan) => {
-    setEditingId(scan.id);
-    setDraft({ ...scan }); // COPY
+  const startEdit = (item) => {
+    setEditingItem(item.id);
+    setDraft({ ...item }); // IMPORTANT: copy
   };
 
   const cancelEdit = () => {
-    setEditingId(null);
+    setEditingItem(null);
     setDraft(null);
   };
 
   const applyEdit = () => {
-    setScans((prev) =>
-      prev.map((s) => (s.id === editingId ? draft : s))
+    setReference((prev) =>
+      prev.map((r) =>
+        r.id === editingItem ? draft : r
+      )
     );
     cancelEdit();
   };
@@ -44,30 +46,26 @@ export default function ScanList() {
   const onChange = (key, value) =>
     setDraft((prev) => ({ ...prev, [key]: value }));
 
-
-  const handleSearch = (e) => {
-    debounce(setSearch(String(e.target.value).trim().toLowerCase()), 300)
-  }
+  if (!view.reference_list) return null;
 
   return (
-    <Panel
-      title="Scans"
-      onClose={() => setView({ ...view, scan_list: false })}
-      pos={{ left: 10, top: 40 }}
-      search={<TextInput type="search" placeholder="Search" onChange={handleSearch} />}
-    >
+    <Panel title="Reference" onClose={onClose} pos={{ left: 10, top: 40 }}>
       {/* EDIT MODE */}
-      {editingId && draft && (
+      {editingItem && draft && (
         <>
           <FormRenderer
             fields={[
-              { type: "text", name: "scan_details", label: "Scan Details" },
-              { type: "number", name: "nominal_thk", label: "Nominal Thk (mm)" },
+              { type: "divider", label: "Position" },
+
               { type: "number", name: "x", label: "X (mm)" },
               { type: "number", name: "y", label: "Y (mm)" },
-              { type: "number", name: "rotation", label: "Rotation (°)" },
               { type: "number", name: "width", label: "Width (mm)" },
-              { type: "number", name: "height", label: "Height (mm)" }
+              { type: "number", name: "height", label: "Height (mm)" },
+
+              { type: "divider", label: "Display" },
+
+              { type: "text", name: "name", label: "Name" },
+              { type: "text", name: "scan_details", label: "Description" },
             ]}
             value={draft}
             onChange={onChange}
@@ -84,15 +82,13 @@ export default function ScanList() {
         </>
       )}
 
-
-
       {/* LIST MODE */}
-      {!editingId && (
+      {!editingItem && (
         <Stack gap="xs">
-          {scans.filter(s => (s.scan_details || "").trim().toLowerCase().includes(search)).map((scan) => (
-            <ScanItem
-              key={scan.id}
-              scan={scan}
+          {reference.map((r) => (
+            <Item
+              key={r.id}
+              item={r}
               onEdit={startEdit}
             />
           ))}
@@ -104,13 +100,13 @@ export default function ScanList() {
 
 
 
-export function ScanItem({ scan, onEdit }) {
+export function Item({ item, onEdit }) {
   const [selected, setSelected] = useRecoilState(selectedObjectAtom);
   const [toolbar] = useRecoilState(toolbarAtom);
 
   const isSelected =
-    selected?.type === "scan" &&
-    selected?.obj?.id === scan.id;
+    selected?.type === "reference" &&
+    selected?.obj?.id === item.id;
 
   const itemRef = useRef(null);
 
@@ -130,26 +126,22 @@ export function ScanItem({ scan, onEdit }) {
       p="sm"
       radius="md"
       draggable={toolbar.scan_registration_mode}
-      onDragStart={(e) =>
-        e.dataTransfer.setData("scan-data", JSON.stringify(scan))
-      }
       style={{
         cursor: toolbar.scan_registration_mode ? "grab" : "default",
         border: isSelected ? "2px solid #1c7ed6" : "1px solid #ddd",
         backgroundColor: isSelected ? "#e7f5ff" : "white",
       }}
       onClick={() =>
-        setSelected({ type: "scan", obj: scan })
+        setSelected({ type: "reference", obj: item })
       }
     >
       <Group position="apart">
-        <Text weight={500}>{scan.name}</Text>
-
+        <Text weight={500}>{item.name}</Text>
         <ActionIcon
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            onEdit(scan);
+            onEdit(item);
           }}
         >
           <IconEdit size={16} />
@@ -157,11 +149,11 @@ export function ScanItem({ scan, onEdit }) {
       </Group>
 
       <Text size="sm">
-        X={scan.x}, Y={scan.y}, W={scan.width}, H={scan.height}
+        X={item.x}, Y={item.y}
       </Text>
 
       <Text size="xs" c="dimmed">
-        {scan.scan_details || "No description"}
+        {item.scan_details || "No description"}
       </Text>
     </Card>
   );

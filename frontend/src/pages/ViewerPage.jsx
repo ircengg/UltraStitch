@@ -6,6 +6,7 @@ import DrawingSettings from "../components/DrawingSettings";
 import { ScanEditor } from "../components/ScanEditor";
 import ScanList from "../components/ScanList";
 import { ReferenceEditor } from "../components/ReferenceEditor";
+import ReferenceList from "../components/ReferenceList";
 
 
 export default function ViewerPage() {
@@ -14,6 +15,7 @@ export default function ViewerPage() {
         <Box p={0} m={0}>           
             <CanvasArea />
             <ScanList />
+            <ReferenceList />
             <Toolbar />
             <DrawingSettings />       
             <ScanEditor />

@@ -1,5 +1,5 @@
-# env = "dev"
-env = "prod"
+env = "dev"
+# env = "prod"
 
 
 
@@ -27,7 +27,7 @@ def on_license_fail(result):
 
 
 def get_entrypoint():
-    if env == "development":
+    if env == "dev":
         return "http://localhost:5173/"
     base = os.path.dirname(__file__)
     p1 =   os.path.join(utils.get_app_dir(), "dist", "index.html")

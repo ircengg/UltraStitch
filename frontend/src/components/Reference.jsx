@@ -92,7 +92,7 @@ const Reference = ({ reference }) => {
         }}
         onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
-        opacity={drawing.scanOpacity / 100}
+        opacity={drawing.referenceOpacity / 100}
         // onMouseEnter={onScanHoverIn}
         // onMouseMove={handleMouseMove}
         // onMouseLeave={onScanHoverOut}

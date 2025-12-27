@@ -186,6 +186,7 @@ export const viewAtom = atom({
   key: 'viewAtom',
   default: {
     scan_list: true,
+    reference_list: false,
     drawing_setting: false,
     scan_editor: false,
     reference_editor:false,

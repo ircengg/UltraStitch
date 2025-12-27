@@ -134,6 +134,7 @@ export default function Menubar() {
 
                 <Menu.Dropdown>
                     <CheckMenu title={"Scan List"} name={"scan_list"} />
+                    <CheckMenu title={"Reference List"} name={"reference_list"} />
                     <CheckMenu title={"Scan Editor"} name={"scan_editor"} />
                     <CheckMenu title={"Reference Editor"} name={"reference_editor"} />
                     <CheckMenu title={"Drawing Setings"} name={"drawing_setting"} />
